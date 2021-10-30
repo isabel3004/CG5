@@ -14,6 +14,12 @@ uniform vec4 u_mat_specular;
 uniform vec4 u_mat_diffuse;
 uniform float u_mat_shininess;
 
+// fog
+uniform vec4 u_start_fog;
+uniform vec4 u_end_fog;
+uniform vec4 u_fog_color;
+varying vec4 v_position;
+
 void main(void)
 {
 	vec4 mat_diffuse = u_mat_diffuse;
@@ -27,6 +33,15 @@ void main(void)
 
 	if (opacity < 0.01) {
 		discard;
+	}
+
+	float fog_factor;
+	if (length(v_position) <= length(u_start_fog)) {
+		fog_factor = 0.0;
+	} else if (length(v_position) >= length(u_end_fog)) {
+		fog_factor = 1.0;
+	} else {
+		fog_factor = ( length(v_position) - length(u_start_fog) ) / ( length(u_end_fog) - length(u_start_fog) );
 	}
 
 	// lit opposite side
@@ -49,7 +64,8 @@ void main(void)
 	float lambert = max(dot(v_normal, v_s) / (n_len * s_len), 0.0);
 	float phong = max(dot(v_normal, v_h) / (n_len * h_len), 0.0);
 
-	gl_FragColor = lambert * u_light_diffuse * mat_diffuse
+	vec4 frag_color = lambert * u_light_diffuse * mat_diffuse
         + pow(phong, u_mat_shininess) * u_light_specular * mat_specular;
+	gl_FragColor = (1.0 - fog_factor) * frag_color + fog_factor * u_fog_color;
 	gl_FragColor.a = opacity;
 }

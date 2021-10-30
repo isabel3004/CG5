@@ -17,6 +17,8 @@ varying vec4 v_s;
 varying vec4 v_h;
 varying vec2 v_uv;
 
+varying vec4 v_position;
+
 void main(void)
 {
 	vec4 position = vec4(a_position.x, a_position.y, a_position.z, 1.0);
@@ -40,6 +42,7 @@ void main(void)
 	// v_color = (light_factor_1 + light_factor_2) * u_color; 
 
 	position = u_view_matrix * position; // eye coordinates
+	v_position = position;
 	position = u_projection_matrix * position; // clip coordinates
 
 	gl_Position = position;

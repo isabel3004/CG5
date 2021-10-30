@@ -29,13 +29,19 @@ class GraphicsProgram3D:
         self.view_matrix.look(Point(5,5,5), Point(0, 0, 0), Vector(0,1,0))
         self.shader.set_view_matrix(self.view_matrix.get_matrix())
 
-        self.fov = pi / 6
+        self.fov = pi / 3
         self.projection_matrix.set_perspective(self.fov, 800 / 600, 0.1, 10)
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
 
+        ### fog ###
+        self.shader.set_start_fog(3, 0, 3)
+        self.shader.set_end_fog(7, 0, 7)
+        self.shader.set_fog_color(0.1, 0.1, 0.1)
+
         self.cube = Cube()
         self.sphere = OptimizedSphere(24, 48)
-        self.obj_model = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'carro.obj')
+        self.car = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'carro.obj')
+        self.asteroid = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_01.obj')
 
         self.clock = pygame.time.Clock()
         self.clock.tick()
@@ -66,7 +72,11 @@ class GraphicsProgram3D:
         self.texture_id_leaf_alpha = self.load_texture(sys.path[0] + "/textures/leaf_alpha_1.jpeg")
         self.texture_id_sky_sphere_01 = self.load_texture(sys.path[0] + "/textures/sky_sphere_01.jpeg")
         self.texture_id_fire_particle = self.load_texture(sys.path[0] + "/textures/fire_particle.png")
-        self.texture_id_particle = self.load_texture(sys.path[0] + '/textures/particle_purple.jpeg')
+        self.texture_id_particle = self.load_texture(sys.path[0] + '/textures/particle_purple.jpeg')        
+        self.texture_id_space_01 = self.load_texture(sys.path[0] + '/textures/space_01.png')
+        self.texture_id_space_02 = self.load_texture(sys.path[0] + '/textures/space_02.jpeg')
+        self.texture_id_asteroid_01 = self.load_texture(sys.path[0] + '/textures/asteroid_01.jpg')
+
 
         self.sprite = Sprite()
         self.sky_sphere = SkySphere(36, 72)
@@ -143,25 +153,28 @@ class GraphicsProgram3D:
         self.model_matrix.load_identity()
 
         ### skybox ###
-        # glDisable(GL_DEPTH_TEST)
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
+        glDisable(GL_DEPTH_TEST)
 
-        # self.sprite_shader.use()
-        # self.sky_sphere.set_vertices(self.sprite_shader)
-        # self.sprite_shader.set_projection_matrix(self.projection_matrix.get_matrix())
-        # self.sprite_shader.set_view_matrix(self.view_matrix.get_matrix())
-        # self.model_matrix.push_matrix()
-        # self.model_matrix.add_translation(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
-        # self.sprite_shader.set_model_matrix(self.model_matrix.matrix)      
+        self.sprite_shader.use()
+        self.sky_sphere.set_vertices(self.sprite_shader)
+        self.sprite_shader.set_projection_matrix(self.projection_matrix.get_matrix())
+        self.sprite_shader.set_view_matrix(self.view_matrix.get_matrix())
+        self.model_matrix.push_matrix()
+        self.model_matrix.add_translation(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
+        self.sprite_shader.set_model_matrix(self.model_matrix.matrix)      
         
-        # glActiveTexture(GL_TEXTURE0)
-        # glBindTexture(GL_TEXTURE_2D, self.texture_id_sky_sphere_01)
-        # self.sprite_shader.set_diffuse_tex(0)
-        # self.sprite_shader.set_alpha_tex(None)
-        # self.sprite_shader.set_opacity(1.0)
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id_space_02)
+        self.sprite_shader.set_diffuse_tex(0)
+        self.sprite_shader.set_alpha_tex(None)
+        self.sprite_shader.set_opacity(1.0)
 
-        # self.sky_sphere.draw(self.sprite_shader)
-        # self.model_matrix.pop_matrix()  
-        # glEnable(GL_DEPTH_TEST)
+        self.sky_sphere.draw(self.sprite_shader)
+        self.model_matrix.pop_matrix()  
+        glEnable(GL_DEPTH_TEST)
+        glDisable(GL_CULL_FACE)
         glClear(GL_DEPTH_BUFFER_BIT)
 
         ### objects ###
@@ -182,9 +195,9 @@ class GraphicsProgram3D:
 
         # self.cube.set_vertices(self.shader)
 
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.texture_id_earth)
-        self.shader.set_diffuse_tex(0)
+        # glActiveTexture(GL_TEXTURE0)
+        # glBindTexture(GL_TEXTURE_2D, self.texture_id_space_01)
+        # self.shader.set_diffuse_tex(0)
         # # glActiveTexture(GL_TEXTURE1)
         # # glBindTexture(GL_TEXTURE_2D, self.texture_id_earth_spec)
         # self.shader.set_spec_tex(0) # reset so it is not applied to cube
@@ -229,16 +242,29 @@ class GraphicsProgram3D:
         self.shader.set_mat_diffuse(Color(1, 1, 1), 0.5)
         self.model_matrix.push_matrix()
         self.model_matrix.add_translation(3.0, 10.0, -5.0)
-        self.model_matrix.add_rotation_x(pi / 2.0)
-        self.model_matrix.add_scale(-2.0, -2.0, 2.0)
+        self.model_matrix.add_scale(2.0, 2.0, 2.0)
         self.model_matrix.add_rotation_x(self.angle/5)
         self.model_matrix.add_rotation_y(self.angle/5)
         self.model_matrix.add_rotation_z(self.angle /5)
         self.shader.set_model_matrix(self.model_matrix.matrix)
-        self.obj_model.draw(self.shader)
+        self.car.draw(self.shader)
         # self.sphere.draw(self.shader)
         self.model_matrix.pop_matrix()
+        
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id_asteroid_01)
+        self.shader.set_diffuse_tex(0)
 
+        self.model_matrix.push_matrix()
+        self.model_matrix.add_translation(3.0, 3.0, -3.0)
+        self.model_matrix.add_scale(2.0, 2.0, 2.0)
+        self.model_matrix.add_rotation_x(self.angle/5)
+        self.model_matrix.add_rotation_y(self.angle/5)
+        self.model_matrix.add_rotation_z(self.angle /5)
+        self.shader.set_model_matrix(self.model_matrix.matrix)
+        self.asteroid.draw(self.shader)
+        # self.sphere.draw(self.shader)
+        self.model_matrix.pop_matrix()
         # glDisable(GL_CULL_FACE)
         # glDisable(GL_BLEND)
 

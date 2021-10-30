@@ -63,6 +63,10 @@ class Shader3D:
         self.specularTextureLoc = glGetUniformLocation(self.renderingProgramID, "u_tex02")
         self.usingTextureLoc = glGetUniformLocation(self.renderingProgramID, "u_using_texture")
 
+        self.fogStartLoc = glGetUniformLocation(self.renderingProgramID, "u_start_fog")
+        self.fogEndLoc = glGetUniformLocation(self.renderingProgramID, "u_end_fog")
+        self.fogColorLoc = glGetUniformLocation(self.renderingProgramID, "u_fog_color")
+
     def use(self):
         try:
             glUseProgram(self.renderingProgramID)   
@@ -141,6 +145,15 @@ class Shader3D:
 
     def set_spec_tex(self, number):
         glUniform1i(self.specularTextureLoc, number)
+
+    def set_fog_color(self, r, g, b, alpha=1.0):
+        glUniform4f(self.fogColorLoc, r, g, b, alpha)
+
+    def set_start_fog(self, x, y, z):
+        glUniform4f(self.fogStartLoc, x, y, z, 1.0)
+    
+    def set_end_fog(self, x, y, z):
+        glUniform4f(self.fogEndLoc, x, y, z, 1.0)
 
 
 class SpriteShader:
