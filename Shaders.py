@@ -1,15 +1,13 @@
-# our communication device with the actual shader
+from math import *
+import sys
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from math import * # trigonometry
-
-import sys
 
 from Base3DObjects import *
 
+
 class Shader3D:
-    
     def __init__(self):
         vert_shader = glCreateShader(GL_VERTEX_SHADER)
         shader_file = open(sys.path[0] + "/simple3D.vert")
@@ -34,14 +32,12 @@ class Shader3D:
         glAttachShader(self.renderingProgramID, frag_shader)
         glLinkProgram(self.renderingProgramID)
 
-        # handles to send values into the variables of the shader
         self.positionLoc = glGetAttribLocation(self.renderingProgramID, "a_position")
         glEnableVertexAttribArray(self.positionLoc)
         self.normalLoc = glGetAttribLocation(self.renderingProgramID, "a_normal")
         glEnableVertexAttribArray(self.normalLoc)
         self.uvLoc = glGetAttribLocation(self.renderingProgramID, "a_uv")
         glEnableVertexAttribArray(self.uvLoc)
-        # self.colorLoc = glGetUniformLocation(self.renderingProgramID, "u_color")
         self.lightPosLoc = glGetUniformLocation(self.renderingProgramID, "u_light_position")
         self.eyePosLoc = glGetUniformLocation(self.renderingProgramID, "u_eye_position")
         
@@ -51,11 +47,8 @@ class Shader3D:
         self.materialDiffuseLoc = glGetUniformLocation(self.renderingProgramID, "u_mat_diffuse")
         self.materialSpecLoc = glGetUniformLocation(self.renderingProgramID, "u_mat_specular")
         self.materialShininessLoc = glGetUniformLocation(self.renderingProgramID, "u_mat_shininess")
-        # attributes: 'they run with the shader'
-        # uniform: we set as we need each time
 
-        self.modelMatrixLoc			= glGetUniformLocation(self.renderingProgramID, "u_model_matrix")
-        # self.projectionViewMatrixLoc			= glGetUniformLocation(self.renderingProgramID, "u_projection_view_matrix")
+        self.modelMatrixLoc	= glGetUniformLocation(self.renderingProgramID, "u_model_matrix")
         self.viewMatrixLoc = glGetUniformLocation(self.renderingProgramID, "u_view_matrix")
         self.projectionMatrixLoc = glGetUniformLocation(self.renderingProgramID, "u_projection_matrix")
 
@@ -77,9 +70,6 @@ class Shader3D:
     def set_model_matrix(self, matrix_array):
         glUniformMatrix4fv(self.modelMatrixLoc, 1, True, matrix_array)
 
-    # def set_projection_view_matrix(self, matrix_array):
-        # glUniformMatrix4fv(self.projectionViewMatrixLoc, 1, True, matrix_array)
-
     def set_view_matrix(self, matrix_array):
         glUniformMatrix4fv(self.viewMatrixLoc, 1, True, matrix_array)
 
@@ -89,17 +79,16 @@ class Shader3D:
     def set_attribute_buffers(self, vertex_buffer_id):
         glUniform1f(self.usingTextureLoc, 0.0)
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
-        glVertexAttribPointer(self.positionLoc, 3, GL_FLOAT, False, 6 * sizeof(GLfloat), ctypes.c_void_p(0)) # start at zero, read 3 GLfloats and go on at +6 (skip 3 GLfloats, i.e. the normal for that vertex)
+        glVertexAttribPointer(self.positionLoc, 3, GL_FLOAT, False, 6 * sizeof(GLfloat), ctypes.c_void_p(0)) 
         glVertexAttribPointer(self.normalLoc, 3, GL_FLOAT, False, 6 * sizeof(GLfloat), ctypes.c_void_p(3 * sizeof(GLfloat)))
 
     def set_attribute_buffers_with_uv(self, vertex_buffer_id):
         glUniform1f(self.usingTextureLoc, 1.0)
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id)
-        glVertexAttribPointer(self.positionLoc, 3, GL_FLOAT, False, 8 * sizeof(GLfloat), ctypes.c_void_p(0)) # start at zero, read 3 GLfloats and go on at +6 (skip 3 GLfloats, i.e. the normal for that vertex)
+        glVertexAttribPointer(self.positionLoc, 3, GL_FLOAT, False, 8 * sizeof(GLfloat), ctypes.c_void_p(0))
         glVertexAttribPointer(self.normalLoc, 3, GL_FLOAT, False, 8 * sizeof(GLfloat), ctypes.c_void_p(3 * sizeof(GLfloat)))
         glVertexAttribPointer(self.uvLoc, 2, GL_FLOAT, False, 8 * sizeof(GLfloat), ctypes.c_void_p(6 * sizeof(GLfloat)))
 
-    # values for this variable should be read from the vertex_array
     def set_position_attribute(self, vertex_array):
         glUniform1f(self.usingTextureLoc, 1.0)
         glVertexAttribPointer(self.positionLoc, 3, GL_FLOAT, False, 0, vertex_array)
@@ -109,9 +98,6 @@ class Shader3D:
 
     def set_uv_attribute(self, vertex_array):
         glVertexAttribPointer(self.uvLoc, 2, GL_FLOAT, False, 0, vertex_array)
-
-    # def set_solid_color(self, r, g, b, alpha=1.0):
-    #     glUniform4f(self.colorLoc, r, g, b, alpha)
 
     def set_light_position(self, pos):
         glUniform4f(self.lightPosLoc, pos.x, pos.y, pos.z, 1.0)
@@ -125,14 +111,8 @@ class Shader3D:
     def set_light_specular(self, r, g, b, alpha=1.0):
         glUniform4f(self.lightSpecLoc, r, g, b, alpha)
 
-    # def set_material_diffuse(self, red, green, blue):
-    #     glUniform4f(self.materialDiffuseLoc, red, green, blue, 1.0)
-
     def set_mat_diffuse(self, color, alpha = 1.0):
         glUniform4f(self.materialDiffuseLoc, color.r, color.g, color.b, alpha)
-
-    # def set_material_specular(self, red, green, blue):
-    #     glUniform4f(self.materialSpecularLoc, red, green, blue, 1.0)
 
     def set_mat_specular(self, color):
         glUniform4f(self.materialSpecLoc, color.r, color.g, color.b, 1.0)
@@ -156,8 +136,7 @@ class Shader3D:
         glUniform4f(self.fogEndLoc, x, y, z, 1.0)
 
 
-class SpriteShader:
-    
+class SpriteShader:   
     def __init__(self):
         vert_shader = glCreateShader(GL_VERTEX_SHADER)
         shader_file = open(sys.path[0] + "/sprite_shader.vert")

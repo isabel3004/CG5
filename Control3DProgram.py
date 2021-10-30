@@ -1,5 +1,4 @@
 from math import *
-import time
 
 import pygame
 from pygame.locals import *
@@ -9,6 +8,7 @@ from Matrices import *
 from Base3DObjects import *
 from Particles import *
 import obj_3D_loading
+
 
 class GraphicsProgram3D:
 
@@ -41,7 +41,8 @@ class GraphicsProgram3D:
         self.cube = Cube()
         self.sphere = OptimizedSphere(24, 48)
         self.car = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'carro.obj')
-        self.asteroid = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_01.obj')
+        self.asteroid_01 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_01.obj')
+        self.asteroid_02 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_02.obj')
 
         self.clock = pygame.time.Clock()
         self.clock.tick()
@@ -76,7 +77,7 @@ class GraphicsProgram3D:
         self.texture_id_space_01 = self.load_texture(sys.path[0] + '/textures/space_01.png')
         self.texture_id_space_02 = self.load_texture(sys.path[0] + '/textures/space_02.jpeg')
         self.texture_id_asteroid_01 = self.load_texture(sys.path[0] + '/textures/asteroid_01.jpg')
-
+        self.texture_id_asteroid_02 = self.load_texture(sys.path[0] + '/textures/asteroid_02.png')
 
         self.sprite = Sprite()
         self.sky_sphere = SkySphere(36, 72)
@@ -262,9 +263,25 @@ class GraphicsProgram3D:
         self.model_matrix.add_rotation_y(self.angle/5)
         self.model_matrix.add_rotation_z(self.angle /5)
         self.shader.set_model_matrix(self.model_matrix.matrix)
-        self.asteroid.draw(self.shader)
+        self.asteroid_01.draw(self.shader)
         # self.sphere.draw(self.shader)
         self.model_matrix.pop_matrix()
+
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id_asteroid_02)
+        self.shader.set_diffuse_tex(0)
+
+        self.model_matrix.push_matrix()
+        self.model_matrix.add_translation(-3.0, 3.0, 3.0)
+        self.model_matrix.add_scale(2.0, 2.0, 2.0)
+        self.model_matrix.add_rotation_x(self.angle/5)
+        self.model_matrix.add_rotation_y(self.angle/5)
+        self.model_matrix.add_rotation_z(self.angle /5)
+        self.shader.set_model_matrix(self.model_matrix.matrix)
+        self.asteroid_02.draw(self.shader)
+        # self.sphere.draw(self.shader)
+        self.model_matrix.pop_matrix()
+
         # glDisable(GL_CULL_FACE)
         # glDisable(GL_BLEND)
 
@@ -378,12 +395,11 @@ class GraphicsProgram3D:
                         self.F_key_down = False
             self.update()
             self.display()
-            # time.sleep(0.01)
-
         pygame.quit()
 
     def start(self):
         self.program_loop()
+
 
 if __name__ == "__main__":
     GraphicsProgram3D().start()

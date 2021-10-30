@@ -17,6 +17,10 @@ class Point:
     def __sub__(self, other):
         return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
 
+    def __mul__(self, scalar):
+        return Point(self.x * scalar, self.y * scalar, self.z * scalar)
+
+
 class Vector:
     def __init__(self, x, y, z):
         self.x = x
@@ -51,7 +55,6 @@ class Vector:
 
 class Cube:
     def __init__(self):
-        # we are drawing each face of the cube
         self.position_array = [-0.5, -0.5, -0.5, 
                             -0.5, 0.5, -0.5,
                             0.5, 0.5, -0.5,
@@ -127,11 +130,9 @@ class Cube:
                         1.0, 0.0]
 
     def set_vertices(self, shader):
-        # set these vertex arrays to be those we read from
         shader.set_position_attribute(self.position_array)
         shader.set_normal_attribute(self.normal_array)
         shader.set_uv_attribute(self.uv_array)
-        # sending values from CPU to GPU is slow
 
     def draw(self, shader):       
         for i in range(6): # draw all six faces of the cube
@@ -190,7 +191,6 @@ class Sphere:
 
 
 class OptimizedSphere:
-
     def __init__(self, stacks = 12, slices = 24):
         vertex_array = []
         self.slices = slices
@@ -203,7 +203,7 @@ class OptimizedSphere:
             stack_angle = stack_count * stack_interval
             for slice_count in range(slices + 1):
                 slice_angle = slice_count * slice_interval
-                # do twice, for positions and for normals (for a sphere they are the same)
+                # do twice, for positions and for normals
                 for _ in range(2):
                     vertex_array.append(sin(stack_angle) * cos(slice_angle))
                     vertex_array.append(cos(stack_angle))
@@ -221,7 +221,7 @@ class OptimizedSphere:
         self.vertex_buffer_id = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer_id)
         glBufferData(GL_ARRAY_BUFFER, numpy.array(vertex_array, dtype='float32'), GL_STATIC_DRAW)
-        glBindBuffer(GL_ARRAY_BUFFER, 0) # otherwise things not using this vbo won't be drawn because OpenGL won't find anything
+        glBindBuffer(GL_ARRAY_BUFFER, 0) 
         vertex_array = None
 
     def set_vertices(self, shader):
@@ -234,7 +234,6 @@ class OptimizedSphere:
 
 
 class SkySphere:
-
     def __init__(self, stacks = 6, slices = 12):
         vertex_array = []
         self.slices = slices
@@ -247,14 +246,13 @@ class SkySphere:
             stack_angle = stack_count * stack_interval
             for slice_count in range(slices + 1):
                 slice_angle = slice_count * slice_interval
-                # only once, we don't care abt normals
+                # only once, we don't care about normals in this case
                 vertex_array.append(sin(stack_angle) * cos(slice_angle))
                 vertex_array.append(cos(stack_angle))
                 vertex_array.append(sin(stack_angle) * sin(slice_angle))
 
                 vertex_array.append(slice_count / slices)
                 vertex_array.append((stack_count / stacks))
-                # only once, we don't care abt normals
                 vertex_array.append(sin(stack_angle + stack_interval) * cos(slice_angle))
                 vertex_array.append(cos(stack_angle + stack_interval))
                 vertex_array.append(sin(stack_angle + stack_interval) * sin(slice_angle))
@@ -266,7 +264,7 @@ class SkySphere:
         self.vertex_buffer_id = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer_id)
         glBufferData(GL_ARRAY_BUFFER, numpy.array(vertex_array, dtype='float32'), GL_STATIC_DRAW)
-        glBindBuffer(GL_ARRAY_BUFFER, 0) # otherwise things not using this vbo won't be drawn because OpenGL won't find anything
+        glBindBuffer(GL_ARRAY_BUFFER, 0) 
         vertex_array = None
 
     def set_vertices(self, sprite_shader):
@@ -308,7 +306,7 @@ class MeshModel:
             self.vertex_counts[mesh_id] = 0
         if not uv:
             self.vertex_arrays[mesh_id] += [position.x, position.y, position.z, normal.x, normal.y, normal.z]
-            assert(not self.using_uv) # we assue that for models made up of multiple single models either none of them or all of them use textures
+            assert(not self.using_uv) # we assume that for models made up of multiple single models either none of them or all of them use textures
             self.using_uv = False 
         else:
             self.vertex_arrays[mesh_id] += [position.x, position.y, position.z, normal.x, normal.y, normal.z, uv.x, uv.y]
