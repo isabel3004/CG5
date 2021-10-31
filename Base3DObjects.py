@@ -143,6 +143,7 @@ class Cube:
 
 class Sprite:
     def __init__(self):
+        # only position and normals
         vertex_array = [-0.5, -0.5, 0.0, 0.0, 0.0,
                             -0.5, 0.5, 0.0, 0.0, 1.0,
                             0.5, 0.5, 0.0, 1.0, 1.0,

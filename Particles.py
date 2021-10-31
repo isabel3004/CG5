@@ -1,6 +1,7 @@
 from random import *
 
 from Base3DObjects import *
+from Shaders import *
 
 
 class Particle:
@@ -71,3 +72,23 @@ class ParticleEffect:
         model_matrix.pop_matrix()
         glDisable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
+
+
+class Fire:
+    """Encapsulates a fire particle effect with a strong light source centered in it"""
+    def __init__(self, sprite_shader: SpriteShader, shader: Shader3D, particle_effect: ParticleEffect, color_diffuse: Color, color_specular: Color):
+        self.sprite_shader = sprite_shader
+        self.shader = shader
+        self.particle_effect = particle_effect
+        self.shader.set_light_position(self.particle_effect.position)
+        self.shader.set_light_diffuse(color_diffuse.r, color_diffuse.g, color_diffuse.b)
+        self.shader.set_light_specular(color_specular.r, color_specular.g, color_specular.b)
+
+    def update(self, delta_time):
+        self.particle_effect.update(delta_time)
+    
+    def draw(self, model_matrix):
+        self.sprite_shader.use()
+        self.particle_effect.draw(self.sprite_shader, model_matrix)
+        
+    

@@ -20,15 +20,14 @@ uniform vec4 u_end_fog;
 uniform vec4 u_fog_color;
 varying vec4 v_position;
 
-void main(void)
-{
+void main(void) {
 	vec4 mat_diffuse = u_mat_diffuse;
 	vec4 mat_specular = u_mat_specular;
 	float opacity = u_mat_diffuse.a;
 
 	if (u_using_texture == 1.0) {
 		mat_diffuse *= texture2D(u_tex01, v_uv);
-		opacity = 1.0 - texture2D(u_tex02, v_uv).r; // land, w/o '1.0-' water
+		opacity = 1.0 - texture2D(u_tex02, v_uv).r;
 	}
 
 	if (opacity < 0.01) {
@@ -44,21 +43,8 @@ void main(void)
 		fog_factor = ( length(v_position) - length(u_start_fog) ) / ( length(u_end_fog) - length(u_start_fog) );
 	}
 
-	// lit opposite side
-	// vec4 normal;
-	// if (dot(v_v, v_normal) < 0.0) {
-	// 	normal = - v_normal;
-	// } else {
-	// 	normal = v_normal;
-	// }
-
-	// if (dot(v_v, v_normal) < 0.0) {
-	// 	discard;
-	// }
-
 	float s_len = length(v_s);
 	float n_len = length(v_normal);
-	// vec4 h = v_s + v_v;
 	float h_len = length(v_h);
 	
 	float lambert = max(dot(v_normal, v_s) / (n_len * s_len), 0.0);

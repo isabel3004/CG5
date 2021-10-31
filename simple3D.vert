@@ -3,11 +3,9 @@ attribute vec3 a_normal;
 attribute vec2 a_uv;
 
 uniform mat4 u_model_matrix;
-// uniform mat4 u_projection_view_matrix;
 uniform mat4 u_projection_matrix;
 uniform mat4 u_view_matrix;
 
-// uniform vec4 u_color;
 varying vec4 v_color;
 uniform vec4 u_light_position; // in global coordinates
 uniform vec4 u_eye_position;
@@ -27,7 +25,7 @@ void main(void)
 	// UV coords sent into per-pixel use
 	v_uv = a_uv;
 
-	// transform into global coordinates
+	// global coordinates
 	position = u_model_matrix * position;
 	v_normal = normalize(u_model_matrix * normal);
 
@@ -35,11 +33,6 @@ void main(void)
 	
 	vec4 v = normalize(u_eye_position - position);
 	v_h = normalize(v_s + v);
-
-	// lighting calculations
-	// float light_factor_1 = max(dot(normalize(normal), normalize(vec4(1, 2, 3, 0))), 0.0);
-	// float light_factor_2 = max(dot(normalize(normal), normalize(vec4(-3, -2, -1, 0))), 0.0);
-	// v_color = (light_factor_1 + light_factor_2) * u_color; 
 
 	position = u_view_matrix * position; // eye coordinates
 	v_position = position;

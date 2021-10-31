@@ -38,7 +38,7 @@ class GraphicsProgram3D:
         ### fog ###
         self.shader.set_start_fog(3, 0, 3)
         self.shader.set_end_fog(7, 0, 7)
-        self.shader.set_fog_color(0.9, 0.9, 0.9)
+        self.shader.set_fog_color(0.0, 0.0, 0.0)
 
         self.cube = Cube()
         self.sphere = OptimizedSphere(24, 48)
@@ -74,7 +74,8 @@ class GraphicsProgram3D:
 
         self.sprite = Sprite()
         self.sky_sphere = SkySphere(36, 72)
-        self.particle_effect = ParticleEffect(Point(2.0, 2.0, 2.0), self.texture_id_particle, 1.0)
+        particle_effect = ParticleEffect(Point(2.0, 2.0, 2.0), self.texture_id_particle, 1.0)
+        self.fire = Fire(self.sprite_shader, self.shader, particle_effect, Color(1.0, 1.0, 1.0), Color(0.6, 0.6, 0.6))
 
         self.fr_ticker = 0
         self.fr_sum = 0
@@ -131,7 +132,7 @@ class GraphicsProgram3D:
         # if angle > 2 * pi:
         #     angle -= (2 * pi)
 
-        self.particle_effect.update(delta_time)
+        self.fire.update(delta_time)
 
         if self.can_move:
             if self.UP_key_down: # upwards
@@ -200,9 +201,9 @@ class GraphicsProgram3D:
 
         self.shader.set_eye_position(self.view_matrix.eye)
         # self.shader.set_light_position(Point(10 * cos(self.angle), 0.0, 10 * sin(self.angle)))
-        self.shader.set_light_position(Point(5,15,5))
-        self.shader.set_light_diffuse(1.0, 1.0, 1.0)
-        self.shader.set_light_specular(0.9, 0.9, 0.9)
+        # self.shader.set_light_position(Point(5,15,5))
+        # self.shader.set_light_diffuse(1.0, 1.0, 1.0)
+        # self.shader.set_light_specular(0.9, 0.9, 0.9)
         self.shader.set_mat_diffuse(Color(0.9, 0.9, 0.9))
         self.shader.set_mat_specular(Color(0.3, 0.3, 0.3))
         self.shader.set_mat_shininess(4.0)
@@ -344,7 +345,7 @@ class GraphicsProgram3D:
 
         # glDisable(GL_BLEND)
 
-        self.particle_effect.draw(self.sprite_shader, self.model_matrix)
+        self.fire.draw(self.model_matrix)
 
         pygame.display.flip()
 
