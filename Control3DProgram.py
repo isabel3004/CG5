@@ -8,6 +8,7 @@ from Matrices import *
 from Base3DObjects import *
 from Particles import *
 import obj_3D_loading
+from BezierMotion import *
 
 
 class GraphicsProgram3D:
@@ -15,6 +16,7 @@ class GraphicsProgram3D:
     def __init__(self):
         pygame.init() 
         pygame.display.set_mode((800,600), pygame.OPENGL | pygame.DOUBLEBUF)
+        pygame.display.set_caption("don't forget to set a caption :)")
 
         self.sprite_shader = SpriteShader()
         self.sprite_shader.use()
@@ -29,14 +31,14 @@ class GraphicsProgram3D:
         self.view_matrix.look(Point(5,5,5), Point(0, 0, 0), Vector(0,1,0))
         self.shader.set_view_matrix(self.view_matrix.get_matrix())
 
-        self.fov = pi / 3
-        self.projection_matrix.set_perspective(self.fov, 800 / 600, 0.1, 10)
+        self.fov = pi / 6
+        self.projection_matrix.set_perspective(self.fov, 800 / 600, 0.1, 30)
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
 
         ### fog ###
         self.shader.set_start_fog(3, 0, 3)
         self.shader.set_end_fog(7, 0, 7)
-        self.shader.set_fog_color(0.1, 0.1, 0.1)
+        self.shader.set_fog_color(0.9, 0.9, 0.9)
 
         self.cube = Cube()
         self.sphere = OptimizedSphere(24, 48)
@@ -65,17 +67,8 @@ class GraphicsProgram3D:
         self.translation = Vector(0, 0, 0) 
         self.angle = 0
 
-        self.texture_id01 = self.load_texture(sys.path[0] + "/textures/t1.jpeg")
-        self.texture_id02 = self.load_texture(sys.path[0] + "/textures/tex2.jpeg")
-        self.texture_id_earth = self.load_texture(sys.path[0] + "/textures/earth.jpeg")
-        self.texture_id_earth_spec = self.load_texture(sys.path[0] + "/textures/earth_spec.png")
-        self.texture_id_leaf_color = self.load_texture(sys.path[0] + "/textures/leaf_color_1.jpeg")
-        self.texture_id_leaf_alpha = self.load_texture(sys.path[0] + "/textures/leaf_alpha_1.jpeg")
-        self.texture_id_sky_sphere_01 = self.load_texture(sys.path[0] + "/textures/sky_sphere_01.jpeg")
-        self.texture_id_fire_particle = self.load_texture(sys.path[0] + "/textures/fire_particle.png")
-        self.texture_id_particle = self.load_texture(sys.path[0] + '/textures/particle_purple.jpeg')        
-        self.texture_id_space_01 = self.load_texture(sys.path[0] + '/textures/space_01.png')
-        self.texture_id_space_02 = self.load_texture(sys.path[0] + '/textures/space_02.jpeg')
+        self.texture_id_particle = self.load_texture(sys.path[0] + '/textures/particle_purple.jpeg') 
+        self.texture_id_space_02 = self.load_texture(sys.path[0] + '/textures/space.jpeg')
         self.texture_id_asteroid_01 = self.load_texture(sys.path[0] + '/textures/asteroid_01.jpg')
         self.texture_id_asteroid_02 = self.load_texture(sys.path[0] + '/textures/asteroid_02.png')
 
@@ -85,6 +78,14 @@ class GraphicsProgram3D:
 
         self.fr_ticker = 0
         self.fr_sum = 0
+
+        self.time_running = -1
+        self.start_animation_time = 1.0
+        self.end_animation_time = 10.0
+
+        p = Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
+        self.motion = BezierMotion(p, Point(14,-23,-18), Point(-11,7,-3), Point(3.0,3.0,3.0), self.start_animation_time, self.end_animation_time)
+        self.can_move = True
 
     def load_texture(self, path_string):
         surface = pygame.image.load(path_string)
@@ -103,14 +104,27 @@ class GraphicsProgram3D:
         self.fr_sum += delta_time
         self.fr_ticker += 1
         if self.fr_sum > 1.0:
-            print(self.fr_ticker / self.fr_sum)
+            # print(self.fr_ticker / self.fr_sum)
             self.fr_sum = 0
             self.fr_ticker = 0
+        if self.time_running == -1: # first frame
+            self.time_running = 0.0
+        else:
+            self.time_running += delta_time
+        # print(self.time_running)
+        if self.time_running > self.start_animation_time and self.time_running < self.end_animation_time:
+            self.can_move = False
+            self.motion.get_current_position(self.time_running - self.start_animation_time, self.view_matrix.eye)
+            # print(self.view_matrix.eye)
+        else:
+            self.can_move = True
+
 
         # self.translation += Vector(delta_time, delta_time, delta_time) * 0.2
         # self.angle += delta_time * 0.2
         
         # self.view_matrix.look_at(Point(1, 0, 3) + Point(self.angle, self.angle, self.angle), Point(0, 0, 0), Vector(0,1,0))
+        # self.shader.use()
         # self.shader.set_view_matrix(self.view_matrix.get_matrix())
 
         self.angle += 1 * delta_time
@@ -119,30 +133,31 @@ class GraphicsProgram3D:
 
         self.particle_effect.update(delta_time)
 
-        if self.UP_key_down: # upwards
-            self.view_matrix.pitch(pi * delta_time)
-        if self.DOWN_key_down: # downwards
-            self.view_matrix.pitch(-pi * delta_time)
-        if self.LEFT_key_down: # counterclockwise
-            self.view_matrix.yaw(-pi * delta_time)
-        if self.RIGHT_key_down: # clockwise
-            self.view_matrix.yaw(pi * delta_time)
-        if self.W_key_down: # move forwards
-            self.view_matrix.slide(0, 0, -4 * delta_time)
-        if self.S_key_down: # move backwards
-            self.view_matrix.slide(0, 0, 4 * delta_time)
-        if self.A_key_down: # move left
-            self.view_matrix.slide(-4 * delta_time, 0, 0)
-        if self.D_key_down: # move right
-            self.view_matrix.slide(4 * delta_time, 0, 0)
-        if self.Q_key_down: # counterclockwise
-            self.view_matrix.roll(-pi * delta_time)
-        if self.E_key_down: # clockwise
-            self.view_matrix.roll(pi * delta_time)
-        if self.R_key_down: # move up
-            self.view_matrix.slide(0, 4 * delta_time, 0)
-        if self.F_key_down: # move down
-            self.view_matrix.slide(0, -4 * delta_time, 0)
+        if self.can_move:
+            if self.UP_key_down: # upwards
+                self.view_matrix.pitch(pi * delta_time)
+            if self.DOWN_key_down: # downwards
+                self.view_matrix.pitch(-pi * delta_time)
+            if self.LEFT_key_down: # counterclockwise
+                self.view_matrix.yaw(-pi * delta_time)
+            if self.RIGHT_key_down: # clockwise
+                self.view_matrix.yaw(pi * delta_time)
+            if self.W_key_down: # move forward
+                self.view_matrix.slide(0, 0, -4 * delta_time)
+            if self.S_key_down: # move backwards
+                self.view_matrix.slide(0, 0, 4 * delta_time)
+            if self.A_key_down: # move left
+                self.view_matrix.slide(-4 * delta_time, 0, 0)
+            if self.D_key_down: # move right
+                self.view_matrix.slide(4 * delta_time, 0, 0)
+            if self.Q_key_down: # counterclockwise
+                self.view_matrix.roll(-pi * delta_time)
+            if self.E_key_down: # clockwise
+                self.view_matrix.roll(pi * delta_time)
+            if self.R_key_down: # move up
+                self.view_matrix.slide(0, 4 * delta_time, 0)
+            if self.F_key_down: # move down
+                self.view_matrix.slide(0, -4 * delta_time, 0)
         
     
 

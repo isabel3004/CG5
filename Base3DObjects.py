@@ -20,6 +20,9 @@ class Point:
     def __mul__(self, scalar):
         return Point(self.x * scalar, self.y * scalar, self.z * scalar)
 
+    def __repr__(self):
+        return 'Point(x='+str(self.x)+',y='+str(self.y)+',z='+str(self.z)+')'
+
 
 class Vector:
     def __init__(self, x, y, z):
@@ -103,7 +106,6 @@ class Cube:
                             1.0, 0.0, 0.0,
                             1.0, 0.0, 0.0,
                             1.0, 0.0, 0.0]
-
         self.uv_array = [0.0, 0.0,
                         0.0, 1.0,
                         1.0, 1.0,
@@ -158,7 +160,6 @@ class Sprite:
 
 
 class Sphere:
-
     def __init__(self, stacks = 12, slices = 24):
         self.vertex_array = []
         self.slices = slices

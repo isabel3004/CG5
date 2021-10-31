@@ -37,8 +37,6 @@ def load_obj_file(file_location, file_name):
         elif tokens[0] == "o":
             print("  Mesh: " + tokens[1])
             current_object_id = tokens[1]
-            # current_position_list = []
-            # current_normal_list = []
         elif tokens[0] == "v":
             current_position_list.append(Point(float(tokens[1]), float(tokens[2]), float(tokens[3])))
         elif tokens[0] == "vn":
@@ -58,14 +56,6 @@ def load_obj_file(file_location, file_name):
                     current_normal_list = []
                 if current_uv_list == None:
                     current_uv_list = []
-                # print(str(1) + " " + str(i+2) + " " + str(i+3))
-                # print(int(tokens[i+3][0]))
-                # print(int(tokens[i+3][2]))
-                # print("size: " + str(len(current_position_list)))
-                # print("size: " + str(len(current_normal_list)))
-                # print(int(tokens[1][0])-1)
-                # print(int(tokens[1][1])-1)
-                # print(int(tokens[1][2])-1)
                 if len(current_uv_list) > 0: # i.e. uv coords in the model
                     mesh_model.add_vertex(current_object_id, current_position_list[int(tokens[1][0])-1], current_normal_list[int(tokens[1][2])-1], current_uv_list[int(tokens[1][1])-1])
                     mesh_model.add_vertex(current_object_id, current_position_list[int(tokens[i+2][0])-1], current_normal_list[int(tokens[i+2][2])-1], current_uv_list[int(tokens[i+2][1])-1])

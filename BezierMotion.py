@@ -10,15 +10,23 @@ class BezierMotion:
         self.start_time = start_time
         self.end_time = end_time
 
-    def get_current_position(self, current_time: float):
+    def get_current_position(self, current_time: float, out_pos: Point):
         if current_time < self.start_time:
-            return self.p1
+            out_pos.x = self.p1.x
+            out_pos.y = self.p1.y
+            out_pos.z = self.p1.z
         elif current_time > self.end_time:
-            return self.p4
+            out_pos.x = self.p4.x
+            out_pos.y = self.p4.y
+            out_pos.z = self.p4.z
         else:
-            r = (current_time - self.start_time) / (self.start_time - self.end_time)
-            c1 = (1-r)**3
-            c2 = (1-r)**2 * r
-            c3 = (1-r) * r**2
-            c4 = r**3
-            return self.p1 * c1 + self.p2 * c2 + self.p3 * c3 + self.p4 * c4
+            r = (current_time - self.start_time) / (self.end_time - self.start_time)
+            out_pos.x = self.p1.x * (1.0 - r)*(1.0 - r)*(1.0 - r) + self.p2.x * (1.0 - r)*(1.0 - r)*r + self.p3.x * (1.0 - r)*r*r + self.p4.x * r*r*r
+            out_pos.y = self.p1.y * (1.0 - r)*(1.0 - r)*(1.0 - r) + self.p2.y * (1.0 - r)*(1.0 - r)*r + self.p3.y * (1.0 - r)*r*r + self.p4.y * r*r*r
+            out_pos.z = self.p1.z * (1.0 - r)*(1.0 - r)*(1.0 - r) + self.p2.z * (1.0 - r)*(1.0 - r)*r + self.p3.z * (1.0 - r)*r*r + self.p4.z * r*r*r
+
+
+if __name__ == '__main__':
+    p = Point(2.5,2.2,2.14)
+    c = 1.4
+    print(p * c)
