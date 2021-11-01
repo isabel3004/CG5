@@ -70,6 +70,7 @@ class GraphicsProgram3D:
         self.texture_id_asteroid_01 = self.load_texture(sys.path[0] + '/textures/asteroid_01.jpg')
         self.texture_id_asteroid_02 = self.load_texture(sys.path[0] + '/textures/asteroid_02.png')
         self.texture_id_road = self.load_texture(sys.path[0] + "/textures/road.jpg")
+        self.texture_id_port_passed = self.load_texture(sys.path[0] + "/textures/black.png")
         #self.texture_id_black = self.load_texture(sys.path[0] + '/textures/black.jpeg')
 
         self.sprite = Sprite()
@@ -100,6 +101,8 @@ class GraphicsProgram3D:
         self.can_move = False
 
         self.falling = False
+        self.port11, self.port12 = False, False # has the port been passed yet
+        self.port21 = False
 
         self.clock = pygame.time.Clock()
         self.clock.tick()
@@ -117,7 +120,6 @@ class GraphicsProgram3D:
         return tex_id
 
     def update(self):
-        # save position the player fell at
         if self.falling == False:
             self.previous_position = self.view_matrix.eye
         position = self.view_matrix.eye
@@ -157,10 +159,12 @@ class GraphicsProgram3D:
         # self.fire_04.update(delta_time)
 
         if self.can_move:
+            """
             if self.UP_key_down: # upwards
                 self.view_matrix.pitch(pi * delta_time)
             if self.DOWN_key_down: # downwards
                 self.view_matrix.pitch(-pi * delta_time)
+            """
             if self.LEFT_key_down: # counterclockwise
                 self.view_matrix.yaw(-pi * delta_time)
             if self.RIGHT_key_down: # clockwise
@@ -181,10 +185,10 @@ class GraphicsProgram3D:
                 self.view_matrix.slide(0, 4 * delta_time, 0)
             if self.F_key_down: # move down
                 self.view_matrix.slide(0, -4 * delta_time, 0)
-            print(self.view_matrix.eye.y)
+
+            # falling off track
             floor_x, floor_z = 20, 20
             start_x, start_z = -5, 0
-            # falling off the track
             if (self.view_matrix.eye.x <= (-(start_x + floor_x)) or self.view_matrix.eye.x >= (-start_x)  or self.view_matrix.eye.z <= (-floor_z/2) or self.view_matrix.eye.z >= (floor_z/2)
                 or (-9 < self.view_matrix.eye.x < -1 and 4 > self.view_matrix.eye.z > -4) or self.view_matrix.eye.y < 2):
                 self.view_matrix.eye.y -= 0.1
@@ -198,7 +202,23 @@ class GraphicsProgram3D:
                 self.view_matrix.eye.x = 0
                 self.view_matrix.eye.y = 2.1
                 self.view_matrix.eye.z = -2
+                
+            # check if port is passed
+            if -5.9>=self.view_matrix.eye.x>=-6.1 and -9.4<=self.view_matrix.eye.z<=-8: # port1(-6, -9.5)
+                print("port11 passed")
+                self.port11 = True
+            elif 0.1>=self.view_matrix.eye.x>=-0.1 and -5.50<=self.view_matrix.eye.z<=-4.25: # port1(0, -6)
+                print("port12 passed")
+                self.port12 = True
+            elif -10>=self.view_matrix.eye.x>=-11.5 and -0.1<=self.view_matrix.eye.z<=0.1:
+                print("port21 passed")
+                self.port21 = True
+            
+            if self.port11 and self.port12 and self.port21:
+                print("finished!")
+            # TO DO: display end screen
 
+            
     
 
     def display(self):
@@ -256,7 +276,7 @@ class GraphicsProgram3D:
         glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
         self.shader.set_spec_tex(0)
-        # track
+        # the track
         self.track.set_vertices(self.shader)
         self.shader.set_mat_diffuse(Color(1.0, 1.0, 1.0))
         self.model_matrix.push_matrix()
@@ -266,13 +286,30 @@ class GraphicsProgram3D:
         self.track.draw(self.shader)
         self.model_matrix.pop_matrix()
         
-        self.cube.set_vertices(self.shader)
-        # height and thickness of port
-        h, t = 1.51, 0.2
-        # port width and height
-        p_w, p_h = 1.5, 2
+        def port_passed():
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, self.texture_id_port_passed)
+                self.shader.set_diffuse_tex(0)
+                glActiveTexture(GL_TEXTURE1)
+                glBindTexture(GL_TEXTURE_2D, self.texture_id_port_passed)
+                self.shader.set_spec_tex(0)
 
-        def port1(px, py):       
+        self.cube.set_vertices(self.shader)
+        h, t = 1.51, 0.2 # height and thickness of port
+        p_w, p_h = 1.5, 2 # port width and height
+
+        def port1(px, py, nr):  
+            if nr == 1 and self.port11: 
+                port_passed()
+            elif nr == 2 and self.port12: 
+                port_passed()  
+            else:
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
+                self.shader.set_diffuse_tex(0)
+                glActiveTexture(GL_TEXTURE1)
+                glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
+                self.shader.set_spec_tex(0)
             self.model_matrix.push_matrix()     
             self.model_matrix.add_translation(px, h + (p_h/2), py)   
             self.model_matrix.add_scale(t, p_h, t)
@@ -292,7 +329,16 @@ class GraphicsProgram3D:
             self.cube.draw(self.shader)
             self.model_matrix.pop_matrix()
         
-        def port2(px, py):
+        def port2(px, py, nr):
+            if nr == 1 and self.port21: 
+               port_passed()
+            else:
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
+                self.shader.set_diffuse_tex(0)
+                glActiveTexture(GL_TEXTURE1)
+                glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
+                self.shader.set_spec_tex(0)
             self.model_matrix.push_matrix()     
             self.model_matrix.add_translation(px, h + (p_h/2), py)   
             self.model_matrix.add_scale(t, p_h, t)
@@ -312,10 +358,10 @@ class GraphicsProgram3D:
             self.cube.draw(self.shader)
             self.model_matrix.pop_matrix()
 
-        port1(-6, -9.5)
-        port1(0, -6)
-        port2(2, 1)
-        port2(-10, 0)
+        port1(-6, -9.5, 1)
+        port1(0, -6, 2)
+        port2(-10, 0, 1)
+        #port2(2, 1)
 
 
         # self.cube.set_vertices(self.shader)
