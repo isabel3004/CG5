@@ -9,6 +9,7 @@ from Base3DObjects import *
 from Particles import *
 import obj_3D_loading
 from BezierMotion import *
+import time
 
 
 class GraphicsProgram3D:
@@ -28,7 +29,7 @@ class GraphicsProgram3D:
         self.view_matrix = ViewMatrix()
         self.projection_matrix = ProjectionMatrix()
 
-        self.view_matrix.look(Point(5,5,5), Point(0, 0, 0), Vector(0,1,0))
+        self.view_matrix.look(Point(5,5,5), Point(0, 5, 0), Vector(0,1,0))
         self.shader.set_view_matrix(self.view_matrix.get_matrix())
 
         self.fov = pi / 6
@@ -41,6 +42,7 @@ class GraphicsProgram3D:
         self.shader.set_fog_color(0.0, 0.0, 0.0)
 
         self.cube = Cube()
+        self.track = Track()
         self.sphere = OptimizedSphere(24, 48)
         self.car = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'carro.obj')
         self.asteroid_01 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_01.obj')
@@ -71,6 +73,7 @@ class GraphicsProgram3D:
         self.texture_id_space_02 = self.load_texture(sys.path[0] + '/textures/space.jpeg')
         self.texture_id_asteroid_01 = self.load_texture(sys.path[0] + '/textures/asteroid_01.jpg')
         self.texture_id_asteroid_02 = self.load_texture(sys.path[0] + '/textures/asteroid_02.png')
+        self.texture_id_road = self.load_texture(sys.path[0] + "/textures/road.jpg")
 
         self.sprite = Sprite()
         self.sky_sphere = SkySphere(36, 72)
@@ -87,6 +90,8 @@ class GraphicsProgram3D:
         p = Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
         self.motion = BezierMotion(p, Point(14,-23,-18), Point(-11,7,-3), Point(3.0,3.0,3.0), self.start_animation_time, self.end_animation_time)
         self.can_move = True
+        self.falling = False
+        self.previous_position = Point(0,0,0)
 
     def load_texture(self, path_string):
         surface = pygame.image.load(path_string)
@@ -101,6 +106,10 @@ class GraphicsProgram3D:
         return tex_id
 
     def update(self):
+        # save position the player fell at
+        if self.falling == False:
+            self.previous_position = self.view_matrix.eye
+        position = self.view_matrix.eye
         delta_time = self.clock.tick() / 1000.0
         self.fr_sum += delta_time
         self.fr_ticker += 1
@@ -133,7 +142,7 @@ class GraphicsProgram3D:
         #     angle -= (2 * pi)
 
         self.fire.update(delta_time)
-
+        
         if self.can_move:
             if self.UP_key_down: # upwards
                 self.view_matrix.pitch(pi * delta_time)
@@ -159,7 +168,19 @@ class GraphicsProgram3D:
                 self.view_matrix.slide(0, 4 * delta_time, 0)
             if self.F_key_down: # move down
                 self.view_matrix.slide(0, -4 * delta_time, 0)
-        
+
+            floor_x, floor_z = 20, 20
+            start_x, start_z = -5, 0
+            # falling off the track
+            if (self.view_matrix.eye.x <= (-(start_x + floor_x)) or self.view_matrix.eye.x >= (-start_x)  or self.view_matrix.eye.z <= (-floor_z/2) or self.view_matrix.eye.z >= (floor_z/2)
+                or (-9 < self.view_matrix.eye.x < -1 and 4 > self.view_matrix.eye.z > -4) or self.view_matrix.eye.y < 2):
+                self.view_matrix.eye.y -= 0.1
+                self.falling = True
+            if self.falling == True and self.view_matrix.eye.y<-3:
+                    self.view_matrix.eye.x = self.previous_position.x
+                    self.view_matrix.eye.y = self.previous_position.y
+                    self.view_matrix.eye.z = self.previous_position.z
+                    self.falling = False
     
 
     def display(self):
@@ -208,7 +229,76 @@ class GraphicsProgram3D:
         self.shader.set_mat_specular(Color(0.3, 0.3, 0.3))
         self.shader.set_mat_shininess(4.0)
 
-        # self.model_matrix.load_identity()
+        self.model_matrix.load_identity()
+
+        
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
+        self.shader.set_diffuse_tex(0)
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
+        self.shader.set_spec_tex(0)
+        # track
+        self.track.set_vertices(self.shader)
+        self.shader.set_mat_diffuse(Color(1.0, 1.0, 1.0))
+        self.model_matrix.push_matrix()
+        self.model_matrix.add_translation(-5, 2, 0.0) 
+        self.model_matrix.add_scale(20, 1, 20)
+        self.shader.set_model_matrix(self.model_matrix.matrix)
+        self.track.draw(self.shader)
+        self.model_matrix.pop_matrix()
+        
+        self.cube.set_vertices(self.shader)
+        # height and thickness of port
+        h, t = 1.51, 0.2
+        # port width and height
+        p_w, p_h = 1.5, 2
+
+        def port1(px, py):       
+            self.model_matrix.push_matrix()     
+            self.model_matrix.add_translation(px, h + (p_h/2), py)   
+            self.model_matrix.add_scale(t, p_h, t)
+            self.shader.set_model_matrix(self.model_matrix.matrix)
+            self.cube.draw(self.shader)
+            self.model_matrix.pop_matrix()
+            self.model_matrix.push_matrix()     
+            self.model_matrix.add_translation(px, h + (p_h/2), py + p_w)   
+            self.model_matrix.add_scale(t, p_h, t)
+            self.shader.set_model_matrix(self.model_matrix.matrix)
+            self.cube.draw(self.shader)
+            self.model_matrix.pop_matrix()
+            self.model_matrix.push_matrix()     
+            self.model_matrix.add_translation(px, h + p_h, py + (p_w/2))   
+            self.model_matrix.add_scale(t, t, p_w + t)
+            self.shader.set_model_matrix(self.model_matrix.matrix)
+            self.cube.draw(self.shader)
+            self.model_matrix.pop_matrix()
+        
+        def port2(px, py):
+            self.model_matrix.push_matrix()     
+            self.model_matrix.add_translation(px, h + (p_h/2), py)   
+            self.model_matrix.add_scale(t, p_h, t)
+            self.shader.set_model_matrix(self.model_matrix.matrix)
+            self.cube.draw(self.shader)
+            self.model_matrix.pop_matrix()
+            self.model_matrix.push_matrix()     
+            self.model_matrix.add_translation(px - p_w, h + (p_h/2), py)   
+            self.model_matrix.add_scale(t, p_h, t)
+            self.shader.set_model_matrix(self.model_matrix.matrix)
+            self.cube.draw(self.shader)
+            self.model_matrix.pop_matrix()
+            self.model_matrix.push_matrix()     
+            self.model_matrix.add_translation(px - (p_w/2), h + p_h, py)   
+            self.model_matrix.add_scale(p_w + t, t, t)
+            self.shader.set_model_matrix(self.model_matrix.matrix)
+            self.cube.draw(self.shader)
+            self.model_matrix.pop_matrix()
+
+        port1(-6, -9.5)
+        port1(0, -6)
+        port2(2, 1)
+        port2(-10, 0)
+
 
         # self.cube.set_vertices(self.shader)
 
@@ -258,7 +348,7 @@ class GraphicsProgram3D:
 
         self.shader.set_mat_diffuse(Color(1, 1, 1), 0.5)
         self.model_matrix.push_matrix()
-        self.model_matrix.add_translation(3.0, 10.0, -5.0)
+        self.model_matrix.add_translation(-13.0, 9.0, -1.0)
         self.model_matrix.add_scale(2.0, 2.0, 2.0)
         self.model_matrix.add_rotation_x(self.angle/5)
         self.model_matrix.add_rotation_y(self.angle/5)
@@ -273,8 +363,8 @@ class GraphicsProgram3D:
         self.shader.set_diffuse_tex(0)
 
         self.model_matrix.push_matrix()
-        self.model_matrix.add_translation(3.0, 3.0, -3.0)
-        self.model_matrix.add_scale(2.0, 2.0, 2.0)
+        self.model_matrix.add_translation(-5.0, 8, -12.0)
+        self.model_matrix.add_scale(3.0, 3.0, 3.0)
         self.model_matrix.add_rotation_x(self.angle/5)
         self.model_matrix.add_rotation_y(self.angle/5)
         self.model_matrix.add_rotation_z(self.angle /5)
@@ -288,8 +378,8 @@ class GraphicsProgram3D:
         self.shader.set_diffuse_tex(0)
 
         self.model_matrix.push_matrix()
-        self.model_matrix.add_translation(-3.0, 3.0, 3.0)
-        self.model_matrix.add_scale(2.0, 2.0, 2.0)
+        self.model_matrix.add_translation(-5, 4.0, 2.0)
+        self.model_matrix.add_scale(3.0, 3.0, 3.0)
         self.model_matrix.add_rotation_x(self.angle/5)
         self.model_matrix.add_rotation_y(self.angle/5)
         self.model_matrix.add_rotation_z(self.angle /5)
