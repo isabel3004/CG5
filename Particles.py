@@ -87,8 +87,8 @@ class Fire:
                 self.shader.set_fire_02_position(self.particle_effect.position)
             elif fire_id == 3:
                 self.shader.set_fire_03_position(self.particle_effect.position)
-            self.shader.set_light_diffuse(1.0, 1.0, 1.0)
-            self.shader.set_light_specular(0.6, 0.6, 0.6)
+            self.shader.set_light_diffuse(0.7, 0.3, 0.7)
+            self.shader.set_light_specular(0.5, 0.2, 0.5)
 
     def update(self, delta_time):
         self.particle_effect.update(delta_time)

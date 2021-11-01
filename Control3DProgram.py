@@ -67,6 +67,7 @@ class GraphicsProgram3D:
         self.texture_id_space_02 = self.load_texture(sys.path[0] + '/textures/space.jpeg')
         self.texture_id_asteroid_01 = self.load_texture(sys.path[0] + '/textures/asteroid_01.jpg')
         self.texture_id_asteroid_02 = self.load_texture(sys.path[0] + '/textures/asteroid_02.png')
+        self.texture_id_black = self.load_texture(sys.path[0] + '/textures/black.jpeg')
 
         self.sprite = Sprite()
         self.sky_sphere = SkySphere(36, 72)
@@ -84,10 +85,15 @@ class GraphicsProgram3D:
 
         self.time_running = -1 # means first frame - will be set to actual running time once the program is fully loaded and starts
         self.start_animation_time = 1.0
-        self.end_animation_time = 11.0
+        self.end_animation_time = 6.0
+        self.game_setup_time = 2.0
 
         p = Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
-        self.motion = BezierMotion(p, Point(24,-16,-11), Point(-4,7,-3), p, self.start_animation_time, self.end_animation_time)
+        self.motion = BezierMotion(p, Point(24,-16,-11), Point(-11, 14, 10), p, self.start_animation_time, self.end_animation_time)
+        # added a small delta-time to make sure we end at the right position, otherwise the motion might end slightly earlier
+        # has to be larger the faster the motion is, i.e. the smaller the difference between end_time and start_time is
+        # 10.0 was just picked arbitrarily after some testing
+        self.end_animation_time += 10.0 / (self.end_animation_time - self.start_animation_time)
         self.can_move = False
 
         self.clock = pygame.time.Clock()
@@ -117,10 +123,7 @@ class GraphicsProgram3D:
             self.time_running = 0.0
         else:
             self.time_running += delta_time
-        # added a small delta-time to make sure we end at the right position, otherwise the motion might end slightly earlier
-        # has to be larger the faster the motion is, i.e. the smaller the difference between end_time and start_time is
-        # 10.0 was just picked arbitrarily after some testing
-        if self.time_running > self.start_animation_time and self.time_running < (self.end_animation_time + 10.0 / (self.end_animation_time - self.start_animation_time)): 
+        if self.time_running > self.start_animation_time and self.time_running < self.end_animation_time:
             self.can_move = False
             self.motion.get_current_position(self.time_running - self.start_animation_time, self.view_matrix.eye)
             # print(self.view_matrix.eye)
@@ -358,7 +361,30 @@ class GraphicsProgram3D:
         self.fire_01.draw(self.model_matrix)
         self.fire_02.draw(self.model_matrix)
         self.fire_03.draw(self.model_matrix)
+        # if not (self.time_running > (self.end_animation_time + 0.5) and self.time_running < self.end_animation_time + self.game_setup_time):
+        #     self.fire_01.draw(self.model_matrix)
+        #     self.fire_02.draw(self.model_matrix)
+        #     self.fire_03.draw(self.model_matrix)
+        #     self.shader.use()
+        #     self.shader.set_start_fog(5, 0, 5)
+        #     self.shader.set_end_fog(15, 0, 15)
+        #     self.shader.set_fog_color(0.0, 0.0, 0.0)
+        # else:
+        #     ratio = self.end_animation_time - self.time_running
+        #     self.shader.use()
+        #     self.shader.set_fog_color(0.0, 0.0, 0.0)
+        #     self.shader.set_start_fog(0, 0, 0)
+        #     self.shader.set_end_fog(0.1, 0.1, 0.1)
         # self.fire_04.draw(self.model_matrix)
+
+        # if self.time_running > (self.end_animation_time + 0.5) and self.time_running < self.end_animation_time + 2.0:
+        #     self.model_matrix.push_matrix()
+        #     glDisable(GL_DEPTH_TEST)
+        #     glActiveTexture(GL_TEXTURE0)
+        #     glBindTexture(GL_TEXTURE_2D, self.texture_id_black)
+        #     self.sprite_shader.set
+        #     glEnable(GL_DEPTH_TEST)
+
 
         pygame.display.flip()
 
