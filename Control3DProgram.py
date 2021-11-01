@@ -35,9 +35,8 @@ class GraphicsProgram3D:
         self.projection_matrix.set_perspective(self.fov, 800 / 600, 0.1, 30)
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
 
-        ### fog ###
-        self.shader.set_start_fog(3, 0, 3)
-        self.shader.set_end_fog(7, 0, 7)
+        self.shader.set_start_fog(5, 0, 5)
+        self.shader.set_end_fog(15, 0, 15)
         self.shader.set_fog_color(0.0, 0.0, 0.0)
 
         self.cube = Cube()
@@ -45,9 +44,6 @@ class GraphicsProgram3D:
         self.car = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'carro.obj')
         self.asteroid_01 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_01.obj')
         self.asteroid_02 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_02.obj')
-
-        self.clock = pygame.time.Clock()
-        self.clock.tick()
 
         self.angle = 0
 
@@ -74,19 +70,28 @@ class GraphicsProgram3D:
 
         self.sprite = Sprite()
         self.sky_sphere = SkySphere(36, 72)
-        particle_effect = ParticleEffect(Point(2.0, 2.0, 2.0), self.texture_id_particle, 1.0)
-        self.fire = Fire(self.sprite_shader, self.shader, particle_effect, Color(1.0, 1.0, 1.0), Color(0.6, 0.6, 0.6))
+        particle_effect_01 = ParticleEffect(Point(2.0, 2.0, 2.0), self.texture_id_particle, 1.0)
+        self.fire_01 = Fire(self.sprite_shader, self.shader, particle_effect_01, 1)
+        particle_effect_02 = ParticleEffect(Point(4.0, 4.0, 4.0), self.texture_id_particle, 1.0)
+        self.fire_02 = Fire(self.sprite_shader, self.shader, particle_effect_02, 2)
+        particle_effect_03 = ParticleEffect(Point(8.0, -3.0, -7.0), self.texture_id_particle, 1.0)
+        self.fire_03 = Fire(self.sprite_shader, self.shader, particle_effect_03, 3)
+        # particle_effect_04 = ParticleEffect(Point(1.0, -3.0, -3.0), self.texture_id_particle, 1.0)
+        # self.fire_04 = Fire(self.sprite_shader, self.shader, particle_effect_04, 4)
 
         self.fr_ticker = 0
         self.fr_sum = 0
 
-        self.time_running = -1
+        self.time_running = -1 # means first frame - will be set to actual running time once the program is fully loaded and starts
         self.start_animation_time = 1.0
-        self.end_animation_time = 10.0
+        self.end_animation_time = 11.0
 
         p = Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
-        self.motion = BezierMotion(p, Point(14,-23,-18), Point(-11,7,-3), Point(3.0,3.0,3.0), self.start_animation_time, self.end_animation_time)
-        self.can_move = True
+        self.motion = BezierMotion(p, Point(24,-16,-11), Point(-4,7,-3), p, self.start_animation_time, self.end_animation_time)
+        self.can_move = False
+
+        self.clock = pygame.time.Clock()
+        self.clock.tick()
 
     def load_texture(self, path_string):
         surface = pygame.image.load(path_string)
@@ -112,8 +117,10 @@ class GraphicsProgram3D:
             self.time_running = 0.0
         else:
             self.time_running += delta_time
-        # print(self.time_running)
-        if self.time_running > self.start_animation_time and self.time_running < self.end_animation_time:
+        # added a small delta-time to make sure we end at the right position, otherwise the motion might end slightly earlier
+        # has to be larger the faster the motion is, i.e. the smaller the difference between end_time and start_time is
+        # 10.0 was just picked arbitrarily after some testing
+        if self.time_running > self.start_animation_time and self.time_running < (self.end_animation_time + 10.0 / (self.end_animation_time - self.start_animation_time)): 
             self.can_move = False
             self.motion.get_current_position(self.time_running - self.start_animation_time, self.view_matrix.eye)
             # print(self.view_matrix.eye)
@@ -132,7 +139,10 @@ class GraphicsProgram3D:
         # if angle > 2 * pi:
         #     angle -= (2 * pi)
 
-        self.fire.update(delta_time)
+        self.fire_01.update(delta_time)
+        self.fire_02.update(delta_time)
+        self.fire_03.update(delta_time)
+        # self.fire_04.update(delta_time)
 
         if self.can_move:
             if self.UP_key_down: # upwards
@@ -260,9 +270,9 @@ class GraphicsProgram3D:
         self.model_matrix.push_matrix()
         self.model_matrix.add_translation(3.0, 10.0, -5.0)
         self.model_matrix.add_scale(2.0, 2.0, 2.0)
-        self.model_matrix.add_rotation_x(self.angle/5)
-        self.model_matrix.add_rotation_y(self.angle/5)
-        self.model_matrix.add_rotation_z(self.angle /5)
+        self.model_matrix.add_rotation_x(self.angle / 3.0)
+        self.model_matrix.add_rotation_y(self.angle / 3.0)
+        self.model_matrix.add_rotation_z(self.angle / 3.0)
         self.shader.set_model_matrix(self.model_matrix.matrix)
         self.car.draw(self.shader)
         # self.sphere.draw(self.shader)
@@ -275,9 +285,9 @@ class GraphicsProgram3D:
         self.model_matrix.push_matrix()
         self.model_matrix.add_translation(3.0, 3.0, -3.0)
         self.model_matrix.add_scale(2.0, 2.0, 2.0)
-        self.model_matrix.add_rotation_x(self.angle/5)
-        self.model_matrix.add_rotation_y(self.angle/5)
-        self.model_matrix.add_rotation_z(self.angle /5)
+        self.model_matrix.add_rotation_x(self.angle / 3.0)
+        self.model_matrix.add_rotation_y(self.angle / 3.0)
+        self.model_matrix.add_rotation_z(self.angle / 3.0)
         self.shader.set_model_matrix(self.model_matrix.matrix)
         self.asteroid_01.draw(self.shader)
         # self.sphere.draw(self.shader)
@@ -290,9 +300,9 @@ class GraphicsProgram3D:
         self.model_matrix.push_matrix()
         self.model_matrix.add_translation(-3.0, 3.0, 3.0)
         self.model_matrix.add_scale(2.0, 2.0, 2.0)
-        self.model_matrix.add_rotation_x(self.angle/5)
-        self.model_matrix.add_rotation_y(self.angle/5)
-        self.model_matrix.add_rotation_z(self.angle /5)
+        self.model_matrix.add_rotation_x(self.angle / 3.0)
+        self.model_matrix.add_rotation_y(self.angle / 3.0)
+        self.model_matrix.add_rotation_z(self.angle / 3.0)
         self.shader.set_model_matrix(self.model_matrix.matrix)
         self.asteroid_02.draw(self.shader)
         # self.sphere.draw(self.shader)
@@ -345,7 +355,10 @@ class GraphicsProgram3D:
 
         # glDisable(GL_BLEND)
 
-        self.fire.draw(self.model_matrix)
+        self.fire_01.draw(self.model_matrix)
+        self.fire_02.draw(self.model_matrix)
+        self.fire_03.draw(self.model_matrix)
+        # self.fire_04.draw(self.model_matrix)
 
         pygame.display.flip()
 
