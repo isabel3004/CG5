@@ -76,13 +76,19 @@ class ParticleEffect:
 
 class Fire:
     """Encapsulates a fire particle effect with a strong light source centered in it"""
-    def __init__(self, sprite_shader: SpriteShader, shader: Shader3D, particle_effect: ParticleEffect, color_diffuse: Color, color_specular: Color):
+    def __init__(self, sprite_shader: SpriteShader, shader: Shader3D, particle_effect: ParticleEffect, fire_id):
         self.sprite_shader = sprite_shader
         self.shader = shader
         self.particle_effect = particle_effect
-        self.shader.set_light_position(self.particle_effect.position)
-        self.shader.set_light_diffuse(color_diffuse.r, color_diffuse.g, color_diffuse.b)
-        self.shader.set_light_specular(color_specular.r, color_specular.g, color_specular.b)
+        if fire_id in {1, 2, 3}:
+            if fire_id == 1:
+                self.shader.set_fire_01_position(self.particle_effect.position)
+            elif fire_id == 2:
+                self.shader.set_fire_02_position(self.particle_effect.position)
+            elif fire_id == 3:
+                self.shader.set_fire_03_position(self.particle_effect.position)
+            self.shader.set_light_diffuse(0.7, 0.3, 0.7)
+            self.shader.set_light_specular(0.5, 0.2, 0.5)
 
     def update(self, delta_time):
         self.particle_effect.update(delta_time)

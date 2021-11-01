@@ -38,8 +38,11 @@ class Shader3D:
         glEnableVertexAttribArray(self.normalLoc)
         self.uvLoc = glGetAttribLocation(self.renderingProgramID, "a_uv")
         glEnableVertexAttribArray(self.uvLoc)
-        self.lightPosLoc = glGetUniformLocation(self.renderingProgramID, "u_light_position")
         self.eyePosLoc = glGetUniformLocation(self.renderingProgramID, "u_eye_position")
+
+        self.fire01Loc = glGetUniformLocation(self.renderingProgramID, "u_fire_01_position")
+        self.fire02Loc = glGetUniformLocation(self.renderingProgramID, "u_fire_02_position")
+        self.fire03Loc = glGetUniformLocation(self.renderingProgramID, "u_fire_03_position")
         
         self.lightDiffuseLoc = glGetUniformLocation(self.renderingProgramID, "u_light_diffuse")
         self.lightSpecLoc = glGetUniformLocation(self.renderingProgramID, "u_light_specular")
@@ -99,8 +102,14 @@ class Shader3D:
     def set_uv_attribute(self, vertex_array):
         glVertexAttribPointer(self.uvLoc, 2, GL_FLOAT, False, 0, vertex_array)
 
-    def set_light_position(self, pos):
-        glUniform4f(self.lightPosLoc, pos.x, pos.y, pos.z, 1.0)
+    def set_fire_01_position(self, pos):
+        glUniform4f(self.fire01Loc, pos.x, pos.y, pos.z, 1.0)
+
+    def set_fire_02_position(self, pos):
+        glUniform4f(self.fire02Loc, pos.x, pos.y, pos.z, 1.0)
+
+    def set_fire_03_position(self, pos):
+        glUniform4f(self.fire03Loc, pos.x, pos.y, pos.z, 1.0)
     
     def set_eye_position(self, pos):
         glUniform4f(self.eyePosLoc, pos.x, pos.y, pos.z, 1.0)
