@@ -9,6 +9,8 @@ from Base3DObjects import *
 from Particles import *
 import obj_3D_loading
 from BezierMotion import *
+
+import tkinter as tk
 import time
 
 
@@ -19,6 +21,7 @@ class GraphicsProgram3D:
         pygame.display.set_mode((800,600), pygame.OPENGL | pygame.DOUBLEBUF)
         pygame.display.set_caption("don't forget to set a caption :)")
 
+        self.t0 = time.time() 
         self.sprite_shader = SpriteShader()
         self.sprite_shader.use()
 
@@ -72,6 +75,9 @@ class GraphicsProgram3D:
         self.texture_id_road = self.load_texture(sys.path[0] + "/textures/road.jpg")
         self.texture_id_port_passed = self.load_texture(sys.path[0] + "/textures/black.png")
         # self.texture_id_black = self.load_texture(sys.path[0] + '/textures/black.jpeg')
+        self.texture_id_boost = self.load_texture(sys.path[0] + "/textures/boost.png")
+        self.texture_id_boost_rotated = self.load_texture(sys.path[0] + "/textures/boost_rotated.png")
+        #self.texture_id_black = self.load_texture(sys.path[0] + '/textures/black.jpeg')
 
         self.sprite = Sprite()
         self.sky_sphere = SkySphere(36, 72)
@@ -92,7 +98,7 @@ class GraphicsProgram3D:
         self.end_animation_time = 6.0
         # self.game_setup_time = 2.0 from the end of the initial animation to the beginning of the actual game
 
-        p = Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
+        p = Point(4, 2.1, 0)#Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
         self.motion = BezierMotion(p, Point(24,-16,-11), Point(-11, 14, 10), p, self.start_animation_time, self.end_animation_time)
         # added a small delta-time to make sure we end at the right position, otherwise the motion might end slightly earlier
         # has to be larger the faster the motion is, i.e. the smaller the difference between end_time and start_time is
@@ -101,8 +107,10 @@ class GraphicsProgram3D:
         self.can_move = False
 
         self.falling = False
-        self.port11, self.port12 = False, False # has the port been passed yet
-        self.port21 = False
+        self.port11, self.port12, self.port13, self.port14 = False, False, False, False # has the port been passed yet
+        self.port21, self.port22 = False, False
+        self.boost = False
+        self.tb = 0
 
         self.clock = pygame.time.Clock()
         self.clock.tick()
@@ -178,10 +186,12 @@ class GraphicsProgram3D:
                 self.view_matrix.slide(-4 * delta_time, 0, 0)
             if self.D_key_down: # move right
                 self.view_matrix.slide(4 * delta_time, 0, 0)
+            """
             if self.Q_key_down: # counterclockwise
                 self.view_matrix.roll(-pi * delta_time)
             if self.E_key_down: # clockwise
                 self.view_matrix.roll(pi * delta_time)
+             """
             if self.R_key_down: # move up
                 self.view_matrix.slide(0, 4 * delta_time, 0)
             if self.F_key_down: # move down
@@ -191,32 +201,46 @@ class GraphicsProgram3D:
             floor_x, floor_z = 20, 20
             start_x, start_z = -5, 0
             if (self.view_matrix.eye.x <= (-(start_x + floor_x)) or self.view_matrix.eye.x >= (-start_x)  or self.view_matrix.eye.z <= (-floor_z/2) or self.view_matrix.eye.z >= (floor_z/2)
-                or (-9 < self.view_matrix.eye.x < -1 and 4 > self.view_matrix.eye.z > -4) or self.view_matrix.eye.y < 2):
-                self.view_matrix.eye.y -= 0.1
+                or (-13 < self.view_matrix.eye.x < 3 and 8 > self.view_matrix.eye.z > -8) or self.view_matrix.eye.y < 2):
+                self.view_matrix.eye.y -= 0.15
                 self.falling = True
-            if self.falling == True and self.view_matrix.eye.y<-3:
-                    self.view_matrix.eye.x = self.previous_position.x
-                    self.view_matrix.eye.y = self.previous_position.y
-                    self.view_matrix.eye.z = self.previous_position.z
-                    self.falling = False
-            if self.view_matrix.eye.y>2.7:
-                self.view_matrix.eye.x = 0
-                self.view_matrix.eye.y = 2.1
-                self.view_matrix.eye.z = -2
+                self.boost = False
+            if self.falling == True and self.view_matrix.eye.y < -2:
+                self.view_matrix.eye.x = self.previous_position.x
+                self.view_matrix.eye.y = self.previous_position.y
+                self.view_matrix.eye.z = self.previous_position.z
+                self.falling = False
+            
+            # boost
+            if (3.2 <= self.view_matrix.eye.x <= 3.8 and -5.5 <= self.view_matrix.eye.z <= -4.5) or (-1.5 <= self.view_matrix.eye.x <= 1.5 and -10 <= self.view_matrix.eye.z <= -9):
+                self.boost = True
+                self.tb = time.time()
+            if self.boost == True and (time.time()-self.tb)<0.8:
+                self.view_matrix.slide(0, 0, -3 * delta_time)
                 
             # check if port is passed
-            if -5.9>=self.view_matrix.eye.x>=-6.1 and -9.4<=self.view_matrix.eye.z<=-8: # port1(-6, -9.5)
+            if -1.9>=self.view_matrix.eye.x>=-2.1 and -9.9 <=self.view_matrix.eye.z<=-9.1: # port1(2, -9.9, 1)
                 print("port11 passed")
                 self.port11 = True
-            elif 0.1>=self.view_matrix.eye.x>=-0.1 and -5.50<=self.view_matrix.eye.z<=-4.25: # port1(0, -6)
+            elif -5.9>=self.view_matrix.eye.x>=-6.1 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6, -9.2, 2)
                 print("port12 passed")
                 self.port12 = True
-            elif -10>=self.view_matrix.eye.x>=-11.5 and -0.1<=self.view_matrix.eye.z<=0.1:
+            elif -6.3>=self.view_matrix.eye.x>=-6.5 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6.4, -9.2, 3)
+                print("port13 passed")
+                self.port13 = True
+            elif -6.7>=self.view_matrix.eye.x>=-6.9 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6.8, -9.2, 4)
+                print("port14 passed")
+                self.port14 = True
+            elif 4.9>=self.view_matrix.eye.x>=4.1 and -7.1<=self.view_matrix.eye.z<=-6.9: # port2(4.9, -7, 1)
                 print("port21 passed")
                 self.port21 = True
+            elif 4.2>=self.view_matrix.eye.x>=3.4 and -3.1<=self.view_matrix.eye.z<=-2.9: # port2(4.2, -3, 2)
+                print("port22 passed")
+                self.port22 = True
             
-            if self.port11 and self.port12 and self.port21:
-                print("finished!")
+            if self.port11 and self.port12 and self.port13 and self.port14 and self.port21 and self.port22:
+                print("finished in!", time.time()-self.t0)
+                print(time.time()-self.t0)
             # TO DO: display end screen
 
             
@@ -265,14 +289,15 @@ class GraphicsProgram3D:
         self.shader.set_mat_shininess(4.0)
 
         self.model_matrix.load_identity()
+        def set_tex(tex):
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            self.shader.set_diffuse_tex(0)
+            glActiveTexture(GL_TEXTURE1)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            self.shader.set_spec_tex(0)
 
-        
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
-        self.shader.set_diffuse_tex(0)
-        glActiveTexture(GL_TEXTURE1)
-        glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
-        self.shader.set_spec_tex(0)
+        set_tex(self.texture_id_road)
         # the track
         self.track.set_vertices(self.shader)
         self.shader.set_mat_diffuse(Color(1.0, 1.0, 1.0))
@@ -292,21 +317,20 @@ class GraphicsProgram3D:
                 # self.shader.set_spec_tex(0)
 
         self.cube.set_vertices(self.shader)
-        h, t = 1.51, 0.2 # height and thickness of port
-        p_w, p_h = 1.5, 2 # port width and height
+        h, t = 1.51, 0.05 # height course and thickness of port
+        p_w, p_h = 0.8, 1.4 # port width and height
 
         def port1(px, py, nr):  
             if nr == 1 and self.port11: 
-                port_passed()
+                set_tex(self.texture_id_port_passed)
             elif nr == 2 and self.port12: 
-                port_passed()  
+                set_tex(self.texture_id_port_passed)
+            elif nr == 3 and self.port13:
+                set_tex(self.texture_id_port_passed)
+            elif nr == 4 and self.port14:
+                set_tex(self.texture_id_port_passed)
             else:
-                glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
-                self.shader.set_diffuse_tex(0)
-                glActiveTexture(GL_TEXTURE1)
-                glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
-                self.shader.set_spec_tex(0)
+                set_tex(self.texture_id_road)
             self.model_matrix.push_matrix()     
             self.model_matrix.add_translation(px, h + (p_h/2), py)   
             self.model_matrix.add_scale(t, p_h, t)
@@ -328,14 +352,11 @@ class GraphicsProgram3D:
         
         def port2(px, py, nr):
             if nr == 1 and self.port21: 
-               port_passed()
+               set_tex(self.texture_id_port_passed)
+            elif nr == 2 and self.port22:
+                set_tex(self.texture_id_port_passed)
             else:
-                glActiveTexture(GL_TEXTURE0)
-                glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
-                self.shader.set_diffuse_tex(0)
-                glActiveTexture(GL_TEXTURE1)
-                glBindTexture(GL_TEXTURE_2D, self.texture_id_road)
-                self.shader.set_spec_tex(0)
+                set_tex(self.texture_id_road)
             self.model_matrix.push_matrix()     
             self.model_matrix.add_translation(px, h + (p_h/2), py)   
             self.model_matrix.add_scale(t, p_h, t)
@@ -355,10 +376,31 @@ class GraphicsProgram3D:
             self.cube.draw(self.shader)
             self.model_matrix.pop_matrix()
 
-        port1(-6, -9.5, 1)
-        port1(0, -6, 2)
-        port2(-10, 0, 1)
-        #port2(2, 1)
+        port2(4.9, -7, 1)
+        port2(4.2, -3, 2)
+        port1(2, -9.9, 1)
+        port1(-6, -9.2, 2)
+        port1(-6.4, -9.2, 3)
+        port1(-6.8, -9.2, 4)
+
+        
+        set_tex(self.texture_id_boost)
+
+        self.model_matrix.push_matrix()     
+        self.model_matrix.add_translation(3.5, 1.52, -5)   
+        self.model_matrix.add_scale(1, 0.01, 0.6)
+        self.shader.set_model_matrix(self.model_matrix.matrix)
+        self.cube.draw(self.shader)
+        self.model_matrix.pop_matrix()
+
+        set_tex(self.texture_id_boost_rotated)
+
+        self.model_matrix.push_matrix()     
+        self.model_matrix.add_translation(0, 1.52, -9.5)   
+        self.model_matrix.add_scale(3, 0.01, 1)
+        self.shader.set_model_matrix(self.model_matrix.matrix)
+        self.cube.draw(self.shader)
+        self.model_matrix.pop_matrix()
 
         self.sphere.set_vertices(self.shader)
 
@@ -394,11 +436,11 @@ class GraphicsProgram3D:
         self.shader.set_diffuse_tex(0)
 
         self.model_matrix.push_matrix()
-        self.model_matrix.add_translation(-5, 3.0, 2.0)
-        self.model_matrix.add_scale(2.0, 2.0, 2.0)
+        self.model_matrix.add_translation(-5, 2.5, 1.0)
+        self.model_matrix.add_scale(3.5, 3.5, 3.5)
         self.model_matrix.add_rotation_x(self.angle/3.0)
         self.model_matrix.add_rotation_y(self.angle/3.0)
-        self.model_matrix.add_rotation_z(self.angle /3.0)
+        self.model_matrix.add_rotation_z(self.angle/3.0)
         self.shader.set_model_matrix(self.model_matrix.matrix)
         self.asteroid_02.draw(self.shader)
         # self.sphere.draw(self.shader)
