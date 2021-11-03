@@ -112,6 +112,8 @@ class GraphicsProgram3D:
         self.game = False # actual game
         self.won = False # victory screen
         self.draw_car = True
+        self.first_transition = False # from animation to game
+        self.second_transition = False # from game to victory screen
         # finally, ready to go
         self.init = True
         self.t0 = time.time() # game start time
@@ -154,6 +156,8 @@ class GraphicsProgram3D:
             elif self.time_running > self.end_animation_time:
                 self.init = False
                 self.transition = True
+                self.first_transition = True
+        # transitions
         elif self.transition:
             if not self.transition_set:
                 self.start_transition_time = self.time_running
@@ -169,7 +173,7 @@ class GraphicsProgram3D:
                 self.shader.use()
                 self.shader.set_start_fog(temp_start_fog, 0, temp_start_fog)
                 self.shader.set_end_fog(temp_end_fog, 0, temp_end_fog)
-                if temp_end_fog < 4.0:
+                if temp_end_fog < 4.0 and self.first_transition:
                     self.draw_car = False
             elif self.mid_transition_time < self.time_running < self.end_transition_time:
                 ratio = (self.time_running - self.mid_transition_time) / (self.end_transition_time - self.mid_transition_time)
@@ -179,9 +183,15 @@ class GraphicsProgram3D:
                 self.shader.use()
                 self.shader.set_start_fog(temp_start_fog, 0, temp_start_fog)
                 self.shader.set_end_fog(temp_end_fog, 0, temp_end_fog)
+                if temp_end_fog > 2.0 and self.second_transition:
+                    self.draw_car = True
             if self.opacity < 0.01:
-                self.view_matrix.look(Point(4.0, 2.1, 0.0), Point(0.0, 2.1, 0.0), Vector(0.0, 1.0, 0.0))
-                self.projection_matrix.set_perspective(pi / 6, 800 / 600, 0.1, 30)
+                if self.first_transition:
+                    self.view_matrix.look(Point(4.0, 2.1, 0.0), Point(0.0, 2.1, 0.0), Vector(0.0, 1.0, 0.0))
+                    self.projection_matrix.set_perspective(pi / 6, 800 / 600, 0.1, 30)
+                elif self.second_transition:
+                    self.view_matrix.look(Point(5.5, 6.5, -11.0), Point(-2.0, 2.0, -3.0), Vector(0, 1, 0))
+                    self.projection_matrix.set_perspective(pi / 4, 800 / 600, 0.5, 50)
                 self.shader.use()
                 self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
             if self.time_running > self.end_transition_time:
@@ -190,7 +200,13 @@ class GraphicsProgram3D:
                 self.shader.set_start_fog(self.start_fog, 0, self.start_fog)
                 self.shader.set_end_fog(self.end_fog, 0, self.end_fog)
                 self.transition = False
-                self.game = True
+                self.transition_set = False
+                if self.first_transition:
+                    self.game = True
+                if self.second_transition:
+                    self.won = True
+                self.first_transition = False
+                self.second_transition = False          
         # actual game
         elif self.game:
             self.can_move = True
@@ -258,9 +274,11 @@ class GraphicsProgram3D:
                 if self.port11 and self.port12 and self.port13 and self.port14 and self.port21 and self.port22:
                     print("finished in", time.time()-self.t0)
                     print(time.time()-self.t0)
-                    self.won = True
                     self.game = False
-        # in this case, nothing needs to be updated
+                    self.transition_length = 2.0
+                    self.transition = True
+                    self.second_transition = True
+        # in this case, nothing needs to be updated. We just show stuff 
         elif self.won:
             pass
 
