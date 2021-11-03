@@ -93,6 +93,7 @@ class GraphicsProgram3D:
         self.end_animation_time += 10.0 / (self.end_animation_time - self.start_animation_time)
         self.can_move = False
         # variables used in the actual game
+        self.speed = 0.0
         self.falling = False
         self.port11, self.port12, self.port13, self.port14 = False, False, False, False # has the port been passed yet
         self.port21, self.port22 = False, False
@@ -144,42 +145,28 @@ class GraphicsProgram3D:
                 self.motion.get_current_position(self.time_running - self.start_animation_time, self.view_matrix.eye)
             elif self.time_running > self.end_animation_time:
                 self.init = False
-                self.transition = True
+                # self.transition = True
+                self.game = True
         # actual game
         elif self.game:
             self.can_move = True
             if not self.falling:
                 self.previous_position = Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
-            
             if self.can_move:
-                """
-                if self.UP_key_down: # upwards
-                    self.view_matrix.pitch(pi * delta_time)
-                if self.DOWN_key_down: # downwards
-                    self.view_matrix.pitch(-pi * delta_time)
-                """
                 if self.LEFT_key_down: # counterclockwise
                     self.view_matrix.yaw(-pi * delta_time)
                 if self.RIGHT_key_down: # clockwise
                     self.view_matrix.yaw(pi * delta_time)
                 if self.W_key_down: # move forward
-                    self.view_matrix.slide(0, 0, -4 * delta_time)
+                    if self.speed < 4.1:
+                        self.speed += 0.05
+                    self.view_matrix.slide(0, 0, -self.speed * delta_time)
+                else:
+                    if self.speed > 0.0:
+                        self.speed -= 0.05
+                        self.view_matrix.slide(0, 0, -self.speed * delta_time)
                 if self.S_key_down: # move backwards
                     self.view_matrix.slide(0, 0, 4 * delta_time)
-                if self.A_key_down: # move left
-                    self.view_matrix.slide(-4 * delta_time, 0, 0)
-                if self.D_key_down: # move right
-                    self.view_matrix.slide(4 * delta_time, 0, 0)
-                """
-                if self.Q_key_down: # counterclockwise
-                    self.view_matrix.roll(-pi * delta_time)
-                if self.E_key_down: # clockwise
-                    self.view_matrix.roll(pi * delta_time)
-                """
-                if self.R_key_down: # move up
-                    self.view_matrix.slide(0, 4 * delta_time, 0)
-                if self.F_key_down: # move down
-                    self.view_matrix.slide(0, -4 * delta_time, 0)
 
                 # falling off track
                 floor_x, floor_z = 20, 20
@@ -191,7 +178,7 @@ class GraphicsProgram3D:
                     self.boost = False
                 if self.falling and self.view_matrix.eye.y < -2:
                     self.view_matrix.eye.x = self.previous_position.x
-                    self.view_matrix.eye.y = self.previous_position.y
+                    self.view_matrix.eye.y = 2.1
                     self.view_matrix.eye.z = self.previous_position.z
                     self.falling = False
                 
