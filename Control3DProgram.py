@@ -29,14 +29,15 @@ class GraphicsProgram3D:
         self.model_matrix = ModelMatrix()
         self.view_matrix = ViewMatrix()
         self.projection_matrix = ProjectionMatrix()
-        self.view_matrix.look(Point(5,5,5), Point(0, 5, 0), Vector(0,1,0))
+        self.view_matrix.look(Point(-13.0, 8.0, 0.0), Point(4.0, 2.1, 0.0), Vector(0,1,0))
         self.shader.set_view_matrix(self.view_matrix.get_matrix())
-        self.fov = pi / 6
-        self.projection_matrix.set_perspective(self.fov, 800 / 600, 0.1, 30)
+        self.projection_matrix.set_perspective(pi / 6, 800 / 600, 0.5, 30)
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
         # set fog
-        self.shader.set_start_fog(5, 0, 5)
-        self.shader.set_end_fog(15, 0, 15)
+        self.start_fog = 5.0
+        self.end_fog = 15.0
+        self.shader.set_start_fog(self.start_fog, 0, self.start_fog)
+        self.shader.set_end_fog(self.end_fog, 0, self.end_fog)
         self.shader.set_fog_color(0.0, 0.0, 0.0)
         # initialize game objects
         self.cube = Cube()
@@ -84,14 +85,20 @@ class GraphicsProgram3D:
         # initial animation phase
         self.time_running = -1 # means first frame - will be set to actual running time once the program is fully loaded and starts
         self.start_animation_time = 1.0
-        self.end_animation_time = 11.0
-        p = Point(4, 2.1, 0) # Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
-        self.motion = BezierMotion(p, Point(24,-16,-11), Point(-11, 14, 10), p, self.start_animation_time, self.end_animation_time)
+        self.end_animation_time = 6.0
+        p =  Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
+        self.motion = BezierMotion(p, Point(1.0, 11.0, -47.0), Point(15.0, 4.0, 2.0), Point(4.0, 9.0, 7.0), self.start_animation_time, self.end_animation_time)
             # added a small delta-time to make sure we end at the right position, otherwise the motion might end slightly earlier
             # has to be larger the faster the motion is, i.e. the smaller the difference between end_time and start_time is
             # 10.0 was just picked arbitrarily after some testing
         self.end_animation_time += 10.0 / (self.end_animation_time - self.start_animation_time)
         self.can_move = False
+        # transition
+        self.transition_set = False
+        self.start_transition_time = None 
+        self.transition_length = 8.0
+        self.mid_transition_time = None
+        self.end_transition_time = None
         # variables used in the actual game
         self.speed = 0.0
         self.falling = False
@@ -102,9 +109,9 @@ class GraphicsProgram3D:
         # program phases
         self.init = False # initial animation
         self.transition = False # transition phase
-        self.transition_length = 3.0
         self.game = False # actual game
         self.won = False # victory screen
+        self.draw_car = True
         # finally, ready to go
         self.init = True
         self.t0 = time.time() # game start time
@@ -143,9 +150,46 @@ class GraphicsProgram3D:
         if self.init:
             if self.start_animation_time < self.time_running < self.end_animation_time:
                 self.motion.get_current_position(self.time_running - self.start_animation_time, self.view_matrix.eye)
+                self.view_matrix.look(self.view_matrix.eye, Point(4.0, 2.1, 0.0), Vector(0, 1, 0))
             elif self.time_running > self.end_animation_time:
                 self.init = False
-                # self.transition = True
+                self.transition = True
+        elif self.transition:
+            if not self.transition_set:
+                self.start_transition_time = self.time_running
+                self.mid_transition_time = self.start_transition_time + self.transition_length / 2
+                self.end_transition_time = self.start_transition_time + self.transition_length
+                self.transition_set = True
+            # linearly interpolate the opacity of the skybox and the fog distance during the transition to get a fading effect
+            if self.start_transition_time < self.time_running < self.mid_transition_time:
+                ratio = (self.time_running - self.start_transition_time) / (self.mid_transition_time - self.start_transition_time)
+                self.opacity = (1.0 - ratio) * 1.0 + ratio * 0.0
+                temp_start_fog = (1.0 - ratio) * self.start_fog + ratio * 0.0
+                temp_end_fog = (1.0 - ratio) * self.end_fog + ratio * 1.0
+                self.shader.use()
+                self.shader.set_start_fog(temp_start_fog, 0, temp_start_fog)
+                self.shader.set_end_fog(temp_end_fog, 0, temp_end_fog)
+                if temp_end_fog < 4.0:
+                    self.draw_car = False
+            elif self.mid_transition_time < self.time_running < self.end_transition_time:
+                ratio = (self.time_running - self.mid_transition_time) / (self.end_transition_time - self.mid_transition_time)
+                self.opacity = (1.0 - ratio) * 0.0 + ratio * 1.0                
+                temp_start_fog = (1.0 - ratio) * 0.0 + ratio * self.start_fog
+                temp_end_fog = (1.0 - ratio) * 1.0 + ratio * self.end_fog
+                self.shader.use()
+                self.shader.set_start_fog(temp_start_fog, 0, temp_start_fog)
+                self.shader.set_end_fog(temp_end_fog, 0, temp_end_fog)
+            if self.opacity < 0.01:
+                self.view_matrix.look(Point(4.0, 2.1, 0.0), Point(0.0, 2.1, 0.0), Vector(0.0, 1.0, 0.0))
+                self.projection_matrix.set_perspective(pi / 6, 800 / 600, 0.1, 30)
+                self.shader.use()
+                self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
+            if self.time_running > self.end_transition_time:
+                self.opacity = 1.0
+                self.shader.use()
+                self.shader.set_start_fog(self.start_fog, 0, self.start_fog)
+                self.shader.set_end_fog(self.end_fog, 0, self.end_fog)
+                self.transition = False
                 self.game = True
         # actual game
         elif self.game:
@@ -158,16 +202,15 @@ class GraphicsProgram3D:
                 if self.RIGHT_key_down: # clockwise
                     self.view_matrix.yaw(pi * delta_time)
                 if self.W_key_down: # move forward
-                    if self.speed < 4.1:
-                        self.speed += 0.05
+                    if self.speed < 5.0:
+                        self.speed += 0.10 # accelerate
                     self.view_matrix.slide(0, 0, -self.speed * delta_time)
                 else:
                     if self.speed > 0.0:
-                        self.speed -= 0.05
+                        self.speed -= 0.05 # decelerate
                         self.view_matrix.slide(0, 0, -self.speed * delta_time)
                 if self.S_key_down: # move backwards
                     self.view_matrix.slide(0, 0, 4 * delta_time)
-
                 # falling off track
                 floor_x, floor_z = 20, 20
                 start_x, start_z = -5, 0
@@ -220,8 +263,6 @@ class GraphicsProgram3D:
         # in this case, nothing needs to be updated
         elif self.won:
             pass
-        elif self.transition:
-            pass
 
     def display(self):
         glEnable(GL_DEPTH_TEST)
@@ -231,6 +272,8 @@ class GraphicsProgram3D:
         self.model_matrix.load_identity()
 
         ### skybox ###
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE)
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK)
         glDisable(GL_DEPTH_TEST)
@@ -254,6 +297,7 @@ class GraphicsProgram3D:
         glEnable(GL_DEPTH_TEST)
         glDisable(GL_CULL_FACE)
         glClear(GL_DEPTH_BUFFER_BIT)
+        glDisable(GL_BLEND)
 
         ### objects ###
         self.shader.use()
@@ -271,7 +315,7 @@ class GraphicsProgram3D:
             self.shader.set_diffuse_tex(0)
             # glActiveTexture(GL_TEXTURE1)
             # glBindTexture(GL_TEXTURE_2D, tex)
-            self.shader.set_spec_tex(0)
+            # self.shader.set_spec_tex(0)
 
         set_tex(self.texture_id_road)
         ### track ###
@@ -378,9 +422,7 @@ class GraphicsProgram3D:
         self.model_matrix.pop_matrix()
 
         # don't draw the car when playing the game
-        if self.init or self.won:
-            self.sphere.set_vertices(self.shader)
-
+        if self.draw_car:
             self.shader.set_mat_diffuse(Color(1, 1, 1), self.opacity)
             self.model_matrix.push_matrix()
             self.model_matrix.add_translation(4.0, 2.3, 0.0)
@@ -425,9 +467,9 @@ class GraphicsProgram3D:
         self.sprite_shader.use()
         self.sprite_shader.set_view_matrix(self.view_matrix.get_matrix())
         self.sprite_shader.set_projection_matrix(self.projection_matrix.get_matrix())
-        self.fire_01.draw(self.model_matrix)
-        self.fire_02.draw(self.model_matrix)
-        self.fire_03.draw(self.model_matrix)
+        self.fire_01.draw(self.model_matrix, self.opacity - 0.3, True)
+        self.fire_02.draw(self.model_matrix, self.opacity - 0.3, True)
+        self.fire_03.draw(self.model_matrix, self.opacity - 0.3, True)
 
         pygame.display.flip()
 
@@ -450,6 +492,19 @@ class GraphicsProgram3D:
                         self.W_key_down = True
                     if event.key == K_s:
                         self.S_key_down = True
+                    if event.key == K_SPACE: # skip initial animation, to hopefully make grading more convenient
+                        self.draw_car = False
+                        self.init = False
+                        self.transition = False
+                        self.game = True
+                        self.shader.use()
+                        self.shader.set_start_fog(self.start_fog, 0, self.start_fog)
+                        self.shader.set_end_fog(self.end_fog, 0, self.end_fog)
+                        self.view_matrix.look(Point(4.0, 2.1, 0.0), Point(0.0, 2.1, 0.0), Vector(0.0, 1.0, 0.0))
+                        self.projection_matrix.set_perspective(pi / 6, 800 / 600, 0.1, 30)
+                        self.shader.set_view_matrix(self.view_matrix.get_matrix())
+                        self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
+                        self.opacity = 1.0
                 elif event.type == pygame.KEYUP:
                     if event.key == K_LEFT:
                         self.LEFT_key_down = False

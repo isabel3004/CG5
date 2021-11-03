@@ -89,7 +89,7 @@ class Fire:
                 self.shader.set_fire_02_position(Point(self.particle_effect.position.x, self.particle_effect.position.y, self.particle_effect.position.z))
             elif fire_id == 3:
                 self.shader.set_fire_03_position(Point(self.particle_effect.position.x, self.particle_effect.position.y, self.particle_effect.position.z))
-            self.shader.set_light_diffuse(0.7, 0.2, 0.7)
+            self.shader.set_light_diffuse(0.7, 0.4, 0.7)
             self.shader.set_light_specular(0.5, 0.2, 0.5)
 
     def update(self, delta_time):
@@ -97,6 +97,6 @@ class Fire:
     
     def draw(self, model_matrix, op = 0.0, use_op = False):
         self.sprite_shader.use()
-        self.particle_effect.draw(self.sprite_shader, model_matrix)
+        self.particle_effect.draw(self.sprite_shader, model_matrix, op, use_op)
         
     
