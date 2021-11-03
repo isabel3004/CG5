@@ -105,6 +105,7 @@ class GraphicsProgram3D:
         # 10.0 was just picked arbitrarily after some testing
         self.end_animation_time += 10.0 / (self.end_animation_time - self.start_animation_time)
         self.can_move = False
+        self.speed = 0
 
         self.falling = False
         self.port11, self.port12, self.port13, self.port14 = False, False, False, False # has the port been passed yet
@@ -130,7 +131,6 @@ class GraphicsProgram3D:
     def update(self):
         if self.falling == False:
             self.previous_position = self.view_matrix.eye
-        position = self.view_matrix.eye
         delta_time = self.clock.tick() / 1000.0
         self.fr_sum += delta_time
         self.fr_ticker += 1
@@ -145,9 +145,9 @@ class GraphicsProgram3D:
         if self.time_running > self.start_animation_time and self.time_running < self.end_animation_time:
             self.can_move = False
             self.motion.get_current_position(self.time_running - self.start_animation_time, self.view_matrix.eye)
-            # print(self.view_matrix.eye)
         else:
             self.can_move = True
+            self.falling = False
 
         self.can_move = True
 
@@ -168,34 +168,21 @@ class GraphicsProgram3D:
         # self.fire_04.update(delta_time)
 
         if self.can_move:
-            """
-            if self.UP_key_down: # upwards
-                self.view_matrix.pitch(pi * delta_time)
-            if self.DOWN_key_down: # downwards
-                self.view_matrix.pitch(-pi * delta_time)
-            """
             if self.LEFT_key_down: # counterclockwise
                 self.view_matrix.yaw(-pi * delta_time)
             if self.RIGHT_key_down: # clockwise
                 self.view_matrix.yaw(pi * delta_time)
             if self.W_key_down: # move forward
-                self.view_matrix.slide(0, 0, -4 * delta_time)
+                if self.speed < 4.1:
+                    self.speed += 0.05
+                self.view_matrix.slide(0, 0, -self.speed * delta_time)
+            else:
+                if self.speed > 0.0:
+                    self.speed -= 0.05
+                    self.view_matrix.slide(0, 0, -self.speed * delta_time)
             if self.S_key_down: # move backwards
                 self.view_matrix.slide(0, 0, 4 * delta_time)
-            if self.A_key_down: # move left
-                self.view_matrix.slide(-4 * delta_time, 0, 0)
-            if self.D_key_down: # move right
-                self.view_matrix.slide(4 * delta_time, 0, 0)
-            """
-            if self.Q_key_down: # counterclockwise
-                self.view_matrix.roll(-pi * delta_time)
-            if self.E_key_down: # clockwise
-                self.view_matrix.roll(pi * delta_time)
-             """
-            if self.R_key_down: # move up
-                self.view_matrix.slide(0, 4 * delta_time, 0)
-            if self.F_key_down: # move down
-                self.view_matrix.slide(0, -4 * delta_time, 0)
+        
 
             # falling off track
             floor_x, floor_z = 20, 20
@@ -205,22 +192,18 @@ class GraphicsProgram3D:
                 self.view_matrix.eye.y -= 0.15
                 self.falling = True
                 self.boost = False
-            if self.falling == True and self.view_matrix.eye.y < -2:
-                self.view_matrix.eye.x = self.previous_position.x
-                self.view_matrix.eye.y = self.previous_position.y
-                self.view_matrix.eye.z = self.previous_position.z
-                self.falling = False
-            if self.view_matrix.eye.y < -4:
+            if self.falling == True and self.view_matrix.eye.y < -4:
                 self.view_matrix.eye.x = self.previous_position.x
                 self.view_matrix.eye.y = 2.1
                 self.view_matrix.eye.z = self.previous_position.z
+                self.falling = False
             # boost
             if (3.2 <= self.view_matrix.eye.x <= 3.8 and -5.5 <= self.view_matrix.eye.z <= -4.5) or (-1.5 <= self.view_matrix.eye.x <= 1.5 and -10 <= self.view_matrix.eye.z <= -9):
                 self.boost = True
                 self.tb = time.time()
             if self.boost == True and (time.time()-self.tb)<0.8:
                 self.view_matrix.slide(0, 0, -3 * delta_time)
-                
+            
             # check if port is passed
             if -1.9>=self.view_matrix.eye.x>=-2.1 and -9.9 <=self.view_matrix.eye.z<=-9.1: # port1(2, -9.9, 1)
                 print("port11 passed")
@@ -234,6 +217,7 @@ class GraphicsProgram3D:
             elif -6.7>=self.view_matrix.eye.x>=-6.9 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6.8, -9.2, 4)
                 print("port14 passed")
                 self.port14 = True
+
             elif 4.9>=self.view_matrix.eye.x>=4.1 and -7.1<=self.view_matrix.eye.z<=-6.9: # port2(4.9, -7, 1)
                 print("port21 passed")
                 self.port21 = True
@@ -473,10 +457,6 @@ class GraphicsProgram3D:
                     if event.key == K_ESCAPE:
                         print("Escaping!")
                         exiting = True
-                    if event.key == K_UP:
-                        self.UP_key_down = True
-                    if event.key == K_DOWN:
-                        self.DOWN_key_down = True
                     if event.key == K_LEFT:
                         self.LEFT_key_down = True
                     if event.key == K_RIGHT:
@@ -485,23 +465,7 @@ class GraphicsProgram3D:
                         self.W_key_down = True
                     if event.key == K_s:
                         self.S_key_down = True
-                    if event.key == K_a:
-                        self.A_key_down = True
-                    if event.key == K_d:
-                        self.D_key_down = True
-                    if event.key == K_q:
-                        self.Q_key_down = True
-                    if event.key == K_e:
-                        self.E_key_down = True
-                    if event.key == K_r:
-                        self.R_key_down = True
-                    if event.key == K_f:
-                        self.F_key_down = True
                 elif event.type == pygame.KEYUP:
-                    if event.key == K_UP:
-                        self.UP_key_down = False
-                    if event.key == K_DOWN:
-                        self.DOWN_key_down = False
                     if event.key == K_LEFT:
                         self.LEFT_key_down = False
                     if event.key == K_RIGHT:
@@ -510,18 +474,6 @@ class GraphicsProgram3D:
                         self.W_key_down = False
                     if event.key == K_s:
                         self.S_key_down = False
-                    if event.key == K_a:
-                        self.A_key_down = False
-                    if event.key == K_d:
-                        self.D_key_down = False
-                    if event.key == K_q:
-                        self.Q_key_down = False
-                    if event.key == K_e:
-                        self.E_key_down = False
-                    if event.key == K_r:
-                        self.R_key_down = False
-                    if event.key == K_f:
-                        self.F_key_down = False
             self.update()
             self.display()
         pygame.quit()
