@@ -82,12 +82,12 @@ class Fire:
         self.particle_effect = particle_effect
         if fire_id in {1, 2, 3}:
             if fire_id == 1:
-                self.shader.set_fire_01_position(self.particle_effect.position)
+                self.shader.set_fire_01_position(Point(self.particle_effect.position.x, self.particle_effect.position.y, self.particle_effect.position.z))
             elif fire_id == 2:
-                self.shader.set_fire_02_position(self.particle_effect.position)
+                self.shader.set_fire_02_position(Point(self.particle_effect.position.x, self.particle_effect.position.y, self.particle_effect.position.z))
             elif fire_id == 3:
-                self.shader.set_fire_03_position(self.particle_effect.position)
-            self.shader.set_light_diffuse(0.7, 0.3, 0.7)
+                self.shader.set_fire_03_position(Point(self.particle_effect.position.x, self.particle_effect.position.y, self.particle_effect.position.z))
+            self.shader.set_light_diffuse(1.0, 1.0, 1.0)
             self.shader.set_light_specular(0.5, 0.2, 0.5)
 
     def update(self, delta_time):

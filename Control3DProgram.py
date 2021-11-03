@@ -71,16 +71,16 @@ class GraphicsProgram3D:
         self.texture_id_asteroid_02 = self.load_texture(sys.path[0] + '/textures/asteroid_02.png')
         self.texture_id_road = self.load_texture(sys.path[0] + "/textures/road.jpg")
         self.texture_id_port_passed = self.load_texture(sys.path[0] + "/textures/black.png")
-        #self.texture_id_black = self.load_texture(sys.path[0] + '/textures/black.jpeg')
+        # self.texture_id_black = self.load_texture(sys.path[0] + '/textures/black.jpeg')
 
         self.sprite = Sprite()
         self.sky_sphere = SkySphere(36, 72)
-        particle_effect_01 = ParticleEffect(Point(2.0, 2.0, 2.0), self.texture_id_particle, 1.0)
-        self.fire_01 = Fire(self.sprite_shader, self.shader, particle_effect_01, 1)
-        particle_effect_02 = ParticleEffect(Point(4.0, 4.0, 4.0), self.texture_id_particle, 1.0)
+        # particle_effect_01 = ParticleEffect(Point(5.0, 5.0, 5.0), self.texture_id_particle, 1.0)
+        # self.fire_01 = Fire(self.sprite_shader, self.shader, particle_effect_01, 1)
+        particle_effect_02 = ParticleEffect(Point(0.0, 5.0, 0.0), self.texture_id_particle, 1.0)
         self.fire_02 = Fire(self.sprite_shader, self.shader, particle_effect_02, 2)
-        particle_effect_03 = ParticleEffect(Point(8.0, -3.0, -7.0), self.texture_id_particle, 1.0)
-        self.fire_03 = Fire(self.sprite_shader, self.shader, particle_effect_03, 3)
+        # particle_effect_03 = ParticleEffect(Point(5.0, 5.0, -5.0), self.texture_id_particle, 1.0)
+        # self.fire_03 = Fire(self.sprite_shader, self.shader, particle_effect_03, 3)
         # particle_effect_04 = ParticleEffect(Point(1.0, -3.0, -3.0), self.texture_id_particle, 1.0)
         # self.fire_04 = Fire(self.sprite_shader, self.shader, particle_effect_04, 4)
 
@@ -90,7 +90,7 @@ class GraphicsProgram3D:
         self.time_running = -1 # means first frame - will be set to actual running time once the program is fully loaded and starts
         self.start_animation_time = 1.0
         self.end_animation_time = 6.0
-        self.game_setup_time = 2.0
+        # self.game_setup_time = 2.0 from the end of the initial animation to the beginning of the actual game
 
         p = Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
         self.motion = BezierMotion(p, Point(24,-16,-11), Point(-11, 14, 10), p, self.start_animation_time, self.end_animation_time)
@@ -141,6 +141,7 @@ class GraphicsProgram3D:
         else:
             self.can_move = True
 
+        self.can_move = True
 
         # self.translation += Vector(delta_time, delta_time, delta_time) * 0.2
         # self.angle += delta_time * 0.2
@@ -153,9 +154,9 @@ class GraphicsProgram3D:
         # if angle > 2 * pi:
         #     angle -= (2 * pi)
 
-        self.fire_01.update(delta_time)
+        # self.fire_01.update(delta_time)
         self.fire_02.update(delta_time)
-        self.fire_03.update(delta_time)
+        # self.fire_03.update(delta_time)
         # self.fire_04.update(delta_time)
 
         if self.can_move:
@@ -259,10 +260,6 @@ class GraphicsProgram3D:
         self.shader.set_view_matrix(self.view_matrix.get_matrix()) # set view matrix every single frame
 
         self.shader.set_eye_position(self.view_matrix.eye)
-        # self.shader.set_light_position(Point(10 * cos(self.angle), 0.0, 10 * sin(self.angle)))
-        # self.shader.set_light_position(Point(5,15,5))
-        # self.shader.set_light_diffuse(1.0, 1.0, 1.0)
-        # self.shader.set_light_specular(0.9, 0.9, 0.9)
         self.shader.set_mat_diffuse(Color(0.9, 0.9, 0.9))
         self.shader.set_mat_specular(Color(0.3, 0.3, 0.3))
         self.shader.set_mat_shininess(4.0)
@@ -290,9 +287,9 @@ class GraphicsProgram3D:
                 glActiveTexture(GL_TEXTURE0)
                 glBindTexture(GL_TEXTURE_2D, self.texture_id_port_passed)
                 self.shader.set_diffuse_tex(0)
-                glActiveTexture(GL_TEXTURE1)
-                glBindTexture(GL_TEXTURE_2D, self.texture_id_port_passed)
-                self.shader.set_spec_tex(0)
+                # glActiveTexture(GL_TEXTURE1)
+                # glBindTexture(GL_TEXTURE_2D, self.texture_id_port_passed)
+                # self.shader.set_spec_tex(0)
 
         self.cube.set_vertices(self.shader)
         h, t = 1.51, 0.2 # height and thickness of port
@@ -363,51 +360,6 @@ class GraphicsProgram3D:
         port2(-10, 0, 1)
         #port2(2, 1)
 
-
-        # self.cube.set_vertices(self.shader)
-
-        # glActiveTexture(GL_TEXTURE0)
-        # glBindTexture(GL_TEXTURE_2D, self.texture_id_space_01)
-        # self.shader.set_diffuse_tex(0)
-        # # glActiveTexture(GL_TEXTURE1)
-        # # glBindTexture(GL_TEXTURE_2D, self.texture_id_earth_spec)
-        # self.shader.set_spec_tex(0) # reset so it is not applied to cube
-        
-        # self.shader.set_mat_diffuse(Color(1.0, 1.0, 1.0))
-        # self.model_matrix.push_matrix()
-        # self.model_matrix.add_translation(3.0, 0.0, -6.0)
-        # self.model_matrix.add_scale(2.0, 2, 2)
-        # self.model_matrix.add_rotation_y(self.angle)
-        # self.model_matrix.add_rotation_z(self.angle)
-        # self.shader.set_model_matrix(self.model_matrix.matrix)
-        # self.cube.draw(self.shader)
-        # self.model_matrix.pop_matrix()
-
-        # # glActiveTexture(GL_TEXTURE0)
-        # # glBindTexture(GL_TEXTURE_2D, self.texture_id_earth_spec)
-        # # self.shader.set_spec_tex(1)
-
-        # # self.shader.set_mat_diffuse(1.0, 1.0, 1.0)
-        # # self.model_matrix.push_matrix()
-        # # self.model_matrix.add_translation(2.0, 3.0, -10.0)
-        # # self.model_matrix.add_scale(2.0, 2, 2)
-        # # self.model_matrix.add_rotation_y(self.angle)
-        # # self.model_matrix.add_rotation_z(self.angle)
-        # # self.shader.set_model_matrix(self.model_matrix.matrix)
-        # # self.cube.draw(self.shader)
-        # # self.model_matrix.pop_matrix()
-
-        # glEnable(GL_CULL_FACE) # just discard some stuff that we do not see nor care abt before the fragment shader for optimization
-        # glCullFace(GL_BACK) 
-        # glFrontFace(GL_CW) # need this bcs of how this sphere is drawn. Use gl_front for skybox effect (only inside face rendered)
-
-        # glEnable(GL_BLEND)
-        # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        # glActiveTexture(GL_TEXTURE1)
-        # glBindTexture(GL_TEXTURE_2D, self.texture_id_earth_spec)
-        # self.shader.set_spec_tex(1)
-
         self.sphere.set_vertices(self.shader)
 
         self.shader.set_mat_diffuse(Color(1, 1, 1), 0.5)
@@ -452,79 +404,15 @@ class GraphicsProgram3D:
         # self.sphere.draw(self.shader)
         self.model_matrix.pop_matrix()
 
-        # glDisable(GL_CULL_FACE)
-        # glDisable(GL_BLEND)
-
-        # self.sphere.set_vertices(self.shader)
-
-        # for i in range(8):
-        #     self.model_matrix.push_matrix()
-        #     self.model_matrix.add_rotation_x(self.angle * 0.74324 + i * pi / 4.0)
-        #     self.model_matrix.add_translation(0, 5, 0)
-        #     self.model_matrix.add_rotation_x(-(self.angle * 0.74324 + i * pi / 4.0))
-        #     self.model_matrix.add_scale(3.0, 3.0, 3.0)
-        #     self.shader.set_model_matrix(self.model_matrix.matrix)
-
-        #     self.shader.set_mat_diffuse(Color(1.0, 1.0, 1.0))
-        #     self.sphere.draw(self.shader)
-        #     self.model_matrix.pop_matrix()
-
-        ### sprite ###
-        # glEnable(GL_BLEND)
-        # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        # glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-        # glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+       
         self.sprite_shader.use()
 
         self.sprite_shader.set_view_matrix(self.view_matrix.get_matrix()) # set view matrix every single frame
         self.sprite_shader.set_projection_matrix(self.projection_matrix.get_matrix())
 
-        # self.model_matrix.push_matrix()
-        # self.model_matrix.add_translation(1.0, 1.0, 1.0)
-        # self.model_matrix.add_scale(3.0, 3.0, 3.0)
-        # self.sprite_shader.set_model_matrix(self.model_matrix.matrix)
-        # self.model_matrix.pop_matrix()
-
-        # self.sprite_shader.set_alpha_tex(1)
-        # glActiveTexture(GL_TEXTURE0)
-        # glBindTexture(GL_TEXTURE_2D, self.texture_id_leaf_color)
-        # self.sprite_shader.set_diffuse_tex(0)
-        # glActiveTexture(GL_TEXTURE1)
-        # glBindTexture(GL_TEXTURE_2D, self.texture_id_leaf_alpha)
-        # self.sprite_shader.set_spec_tex(1)
-        # self.sprite_shader.set_opacity(1.0)
-
-        # self.sprite.draw(self.sprite_shader)
-
-        # glDisable(GL_BLEND)
-
-        self.fire_01.draw(self.model_matrix)
+        # self.fire_01.draw(self.model_matrix)
         self.fire_02.draw(self.model_matrix)
-        self.fire_03.draw(self.model_matrix)
-        # if not (self.time_running > (self.end_animation_time + 0.5) and self.time_running < self.end_animation_time + self.game_setup_time):
-        #     self.fire_01.draw(self.model_matrix)
-        #     self.fire_02.draw(self.model_matrix)
-        #     self.fire_03.draw(self.model_matrix)
-        #     self.shader.use()
-        #     self.shader.set_start_fog(5, 0, 5)
-        #     self.shader.set_end_fog(15, 0, 15)
-        #     self.shader.set_fog_color(0.0, 0.0, 0.0)
-        # else:
-        #     ratio = self.end_animation_time - self.time_running
-        #     self.shader.use()
-        #     self.shader.set_fog_color(0.0, 0.0, 0.0)
-        #     self.shader.set_start_fog(0, 0, 0)
-        #     self.shader.set_end_fog(0.1, 0.1, 0.1)
-        # self.fire_04.draw(self.model_matrix)
-
-        # if self.time_running > (self.end_animation_time + 0.5) and self.time_running < self.end_animation_time + 2.0:
-        #     self.model_matrix.push_matrix()
-        #     glDisable(GL_DEPTH_TEST)
-        #     glActiveTexture(GL_TEXTURE0)
-        #     glBindTexture(GL_TEXTURE_2D, self.texture_id_black)
-        #     self.sprite_shader.set
-        #     glEnable(GL_DEPTH_TEST)
+        # self.fire_03.draw(self.model_matrix)
 
 
         pygame.display.flip()
