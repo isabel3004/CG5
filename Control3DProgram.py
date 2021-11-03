@@ -69,6 +69,7 @@ class GraphicsProgram3D:
         self.texture_id_port_passed = self.load_texture(sys.path[0] + "/textures/black.png")
         self.texture_id_boost = self.load_texture(sys.path[0] + "/textures/boost.png")
         self.texture_id_boost_rotated = self.load_texture(sys.path[0] + "/textures/boost_rotated.png")
+        self.texture_id_victory_message = self.load_texture(sys.path[0] + "/textures/victory_message.png")
         self.opacity = 1.0 # this is used for the fading effect
         # initialize sprites and particle effects
         self.sprite = Sprite()
@@ -488,6 +489,24 @@ class GraphicsProgram3D:
         self.fire_01.draw(self.model_matrix, self.opacity - 0.3, True)
         self.fire_02.draw(self.model_matrix, self.opacity - 0.3, True)
         self.fire_03.draw(self.model_matrix, self.opacity - 0.3, True)
+
+        if self.won: # display victory message
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE)
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, self.texture_id_victory_message)
+            self.sprite_shader.set_diffuse_tex(0)
+            self.sprite_shader.set_alpha_tex(None)
+            self.sprite_shader.set_opacity(0.5)
+            self.model_matrix.push_matrix()
+            self.model_matrix.add_translation(-1, 0, -5)
+            self.model_matrix.add_scale(10, 10, 10)
+            self.model_matrix.add_rotation_y(pi / 6)
+            self.sprite_shader.set_model_matrix(self.model_matrix.matrix)
+            self.sprite_shader.set_diffuse_tex(self.texture_id_victory_message)
+            self.sprite.draw(self.sprite_shader)
+            self.model_matrix.pop_matrix()
+            glDisable(GL_BLEND)
 
         pygame.display.flip()
 
