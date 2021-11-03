@@ -208,7 +208,10 @@ class GraphicsProgram3D:
                 self.view_matrix.eye.y = self.previous_position.y
                 self.view_matrix.eye.z = self.previous_position.z
                 self.falling = False
-            
+            if self.view_matrix.eye.y < -4:
+                self.view_matrix.eye.x = self.previous_position.x
+                self.view_matrix.eye.y = 2.1
+                self.view_matrix.eye.z = self.previous_position.z
             # boost
             if (3.2 <= self.view_matrix.eye.x <= 3.8 and -5.5 <= self.view_matrix.eye.z <= -4.5) or (-1.5 <= self.view_matrix.eye.x <= 1.5 and -10 <= self.view_matrix.eye.z <= -9):
                 self.boost = True
