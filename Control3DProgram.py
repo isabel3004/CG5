@@ -60,10 +60,6 @@ class GraphicsProgram3D:
         self.A_key_down = False
         self.S_key_down = False
         self.D_key_down = False
-        self.Q_key_down = False
-        self.E_key_down = False
-        self.R_key_down = False
-        self.F_key_down = False
 
         self.translation = Vector(0, 0, 0) 
         self.angle = 0
@@ -108,8 +104,8 @@ class GraphicsProgram3D:
         self.speed = 0
 
         self.falling = False
-        self.port11, self.port12, self.port13, self.port14 = False, False, False, False # has the port been passed yet
-        self.port21, self.port22 = False, False
+        self.port11, self.port12, self.port13, self.port14, self.port15, self.port16, self.port17 = False, False, False, False, False, False, False # has the port been passed yet
+        self.port21, self.port22, self.port23, self.port24, self.port25 = False, False, False, False, False
         self.boost = False
         self.tb = 0
 
@@ -183,7 +179,6 @@ class GraphicsProgram3D:
             if self.S_key_down: # move backwards
                 self.view_matrix.slide(0, 0, 4 * delta_time)
         
-
             # falling off track
             floor_x, floor_z = 20, 20
             start_x, start_z = -5, 0
@@ -192,40 +187,90 @@ class GraphicsProgram3D:
                 self.view_matrix.eye.y -= 0.15
                 self.falling = True
                 self.boost = False
-            if self.falling == True and self.view_matrix.eye.y < -4:
+            if self.falling == True and self.view_matrix.eye.y < -5:
                 self.view_matrix.eye.x = self.previous_position.x
                 self.view_matrix.eye.y = 2.1
                 self.view_matrix.eye.z = self.previous_position.z
                 self.falling = False
+                self.speed = 0
+            
             # boost
-            if (3.2 <= self.view_matrix.eye.x <= 3.8 and -5.5 <= self.view_matrix.eye.z <= -4.5) or (-1.5 <= self.view_matrix.eye.x <= 1.5 and -10 <= self.view_matrix.eye.z <= -9):
+            if (3.2 <= self.view_matrix.eye.x <= 3.8 and -5.5 <= self.view_matrix.eye.z <= -4.5) or (-1.5 <= self.view_matrix.eye.x <= 1.5 and -9.5 <= self.view_matrix.eye.z <= -9):
                 self.boost = True
                 self.tb = time.time()
             if self.boost == True and (time.time()-self.tb)<0.8:
                 self.view_matrix.slide(0, 0, -3 * delta_time)
             
-            # check if port is passed
-            if -1.9>=self.view_matrix.eye.x>=-2.1 and -9.9 <=self.view_matrix.eye.z<=-9.1: # port1(2, -9.9, 1)
-                print("port11 passed")
-                self.port11 = True
-            elif -5.9>=self.view_matrix.eye.x>=-6.1 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6, -9.2, 2)
-                print("port12 passed")
-                self.port12 = True
-            elif -6.3>=self.view_matrix.eye.x>=-6.5 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6.4, -9.2, 3)
-                print("port13 passed")
-                self.port13 = True
-            elif -6.7>=self.view_matrix.eye.x>=-6.9 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6.8, -9.2, 4)
-                print("port14 passed")
-                self.port14 = True
+            def port1check(x, y, nr):
+               if x+0.1>=self.view_matrix.eye.x>=x-0.1 and y <=self.view_matrix.eye.z<=y+1:
+                    if nr == 1:
+                        print("port11 passed")
+                        if self.port22:
+                            self.port11 = True
+                    if nr == 2:
+                        print("port12 passed")
+                        if self.port11:
+                            self.port12 = True
+                    if nr == 3:
+                        print("port13 passed")
+                        if self.port12:
+                            self.port13 = True
+                    if nr == 4:
+                        print("port14 passed")
+                        if self.port13:
+                            self.port14 = True
+                    if nr == 5:
+                        print("port15 passed")
+                        if self.port25:
+                            self.port15 = True
+                    if nr == 6:
+                        print("port16 passed")
+                        if self.port15:
+                            self.port16 = True
+                    if nr == 7:
+                        print("port17 passed")
+                        if self.port16:
+                            self.port17 = True
 
-            elif 4.9>=self.view_matrix.eye.x>=4.1 and -7.1<=self.view_matrix.eye.z<=-6.9: # port2(4.9, -7, 1)
-                print("port21 passed")
-                self.port21 = True
-            elif 4.2>=self.view_matrix.eye.x>=3.4 and -3.1<=self.view_matrix.eye.z<=-2.9: # port2(4.2, -3, 2)
-                print("port22 passed")
-                self.port22 = True
+            def port2check(x, y, nr):
+               if x>=self.view_matrix.eye.x>=x-1 and y-0.1 <=self.view_matrix.eye.z<=y+0.1:
+                    if nr == 1:
+                        print("port21 passed")
+                        self.port21 = True
+                    if nr == 2:
+                        print("port22 passed")
+                        if self.port21:
+                            self.port22 = True
+                    if nr == 3:
+                        print("port23 passed")
+                        if self.port14:
+                            self.port23 = True
+                    if nr == 4:
+                        print("port24 passed")
+                        if self.port23:
+                            self.port24 = True
+                    if nr == 5:
+                        print("port25 passed")
+                        if self.port24:
+                            self.port25 = True
             
-            if self.port11 and self.port12 and self.port13 and self.port14 and self.port21 and self.port22:
+
+            port1check(2, -9.9, 1) #3
+            port1check(-6, -9.2, 2) #4
+            port1check(-6.4, -9.2, 3) #5
+            port1check(-6.8, -9.2, 4) #6
+            port1check(-8, 8.8, 7) #10
+            port1check(-7.1, 8.2, 6) #11
+            port1check(2, 8.9, 5) #12
+
+            port2check(4.2, -3, 1) #1
+            port2check(4.9, -7, 2) #2
+            port2check(-13.9, -7, 3)  #7
+            port2check(-13.2, -3, 4)  #8
+            port2check(-13.9, 5, 5) #9
+
+            
+            if self.port11 and self.port12 and self.port13 and self.port14 and self.port15 and self.port16 and self.port17 and self.port21 and self.port22 and self.port23 and self.port24 and self.port25:
                 print("finished in!", time.time()-self.t0)
                 print(time.time()-self.t0)
             # TO DO: display end screen
@@ -280,9 +325,6 @@ class GraphicsProgram3D:
             glActiveTexture(GL_TEXTURE0)
             glBindTexture(GL_TEXTURE_2D, tex)
             self.shader.set_diffuse_tex(0)
-            glActiveTexture(GL_TEXTURE1)
-            glBindTexture(GL_TEXTURE_2D, tex)
-            self.shader.set_spec_tex(0)
 
         set_tex(self.texture_id_road)
         # the track
@@ -299,22 +341,13 @@ class GraphicsProgram3D:
                 glActiveTexture(GL_TEXTURE0)
                 glBindTexture(GL_TEXTURE_2D, self.texture_id_port_passed)
                 self.shader.set_diffuse_tex(0)
-                # glActiveTexture(GL_TEXTURE1)
-                # glBindTexture(GL_TEXTURE_2D, self.texture_id_port_passed)
-                # self.shader.set_spec_tex(0)
 
         self.cube.set_vertices(self.shader)
         h, t = 1.51, 0.05 # height course and thickness of port
-        p_w, p_h = 0.8, 1.4 # port width and height
+        p_w, p_h = 1, 1.4 # port width and height
 
         def port1(px, py, nr):  
-            if nr == 1 and self.port11: 
-                set_tex(self.texture_id_port_passed)
-            elif nr == 2 and self.port12: 
-                set_tex(self.texture_id_port_passed)
-            elif nr == 3 and self.port13:
-                set_tex(self.texture_id_port_passed)
-            elif nr == 4 and self.port14:
+            if (nr == 1 and self.port11) or (nr == 2 and self.port12) or (nr == 3 and self.port13) or (nr == 4 and self.port14) or (nr == 5 and self.port15) or (nr == 6 and self.port16) or (nr == 7 and self.port17): 
                 set_tex(self.texture_id_port_passed)
             else:
                 set_tex(self.texture_id_road)
@@ -338,10 +371,8 @@ class GraphicsProgram3D:
             self.model_matrix.pop_matrix()
         
         def port2(px, py, nr):
-            if nr == 1 and self.port21: 
+            if (nr == 1 and self.port21) or (nr == 2 and self.port22) or (nr == 3 and self.port23) or (nr == 4 and self.port24) or (nr == 5 and self.port25): 
                set_tex(self.texture_id_port_passed)
-            elif nr == 2 and self.port22:
-                set_tex(self.texture_id_port_passed)
             else:
                 set_tex(self.texture_id_road)
             self.model_matrix.push_matrix()     
@@ -363,12 +394,18 @@ class GraphicsProgram3D:
             self.cube.draw(self.shader)
             self.model_matrix.pop_matrix()
 
-        port2(4.9, -7, 1)
-        port2(4.2, -3, 2)
+        port2(4.2, -3, 1)
+        port2(4.9, -7, 2)
         port1(2, -9.9, 1)
         port1(-6, -9.2, 2)
         port1(-6.4, -9.2, 3)
         port1(-6.8, -9.2, 4)
+        port2(-13.9, -7, 3)
+        port2(-13.2, -3, 4)
+        port2(-13.9, 5, 5)
+        port1(-8, 8.8, 5)
+        port1(-7.1, 8.2, 6)
+        port1(2, 8.9, 7)
 
         
         set_tex(self.texture_id_boost)
