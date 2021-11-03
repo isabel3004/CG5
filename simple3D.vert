@@ -3,8 +3,8 @@ attribute vec3 a_normal;
 attribute vec2 a_uv;
 
 uniform mat4 u_model_matrix;
-uniform mat4 u_projection_matrix;
 uniform mat4 u_view_matrix;
+uniform mat4 u_projection_matrix;
 
 uniform vec4 u_eye_position;
 
@@ -30,11 +30,9 @@ void main(void)
 	vec4 position = vec4(a_position.x, a_position.y, a_position.z, 1.0);
 	vec4 normal = vec4(a_normal.x, a_normal.y, a_normal.z, 0.0);
 	
-	// UV coords sent into per-pixel use
-	v_uv = a_uv;
+	v_uv = a_uv; // UV coords sent into per-pixel use
 
-	// global coordinates
-	position = u_model_matrix * position;
+	position = u_model_matrix * position; // global coordinates
 	v_normal = normalize(u_model_matrix * normal);
 
 	v_s_01 = normalize(u_fire_01_position - position);
