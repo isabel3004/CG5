@@ -47,18 +47,10 @@ class GraphicsProgram3D:
         self.asteroid_01 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_01.obj')
         self.asteroid_02 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_02.obj')
         # initialize controls
-        self.UP_key_down = False
-        self.DOWN_key_down = False
         self.LEFT_key_down = False
         self.RIGHT_key_down = False
         self.W_key_down = False
-        self.A_key_down = False
         self.S_key_down = False
-        self.D_key_down = False
-        self.Q_key_down = False
-        self.E_key_down = False
-        self.R_key_down = False
-        self.F_key_down = False
         self.angle = 0
         # initialize textures
         self.texture_id_particle = self.load_texture(sys.path[0] + '/textures/particle_purple.jpeg') 
