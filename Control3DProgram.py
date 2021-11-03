@@ -64,7 +64,7 @@ class GraphicsProgram3D:
         self.texture_id_road = self.load_texture(sys.path[0] + "/textures/road.jpg")
         self.texture_id_port_passed = self.load_texture(sys.path[0] + "/textures/black.png")
         self.texture_id_boost = self.load_texture(sys.path[0] + "/textures/boost.png")
-        self.texture_id_boost_rotated = self.load_texture(sys.path[0] + "/textures/boost_rotated.png")
+        self.texture_id_boost_rotated = self.load_texture(sys.path[0] + "/textures/boostr.png")
         self.texture_id_victory_message = self.load_texture(sys.path[0] + "/textures/victory_message.png")
         self.opacity = 1.0 # this is used for the fading effect
         # initialize sprites and particle effects
@@ -130,6 +130,7 @@ class GraphicsProgram3D:
         return tex_id
 
     def update(self):
+        past_position = self.view_matrix.eye
         delta_time = self.clock.tick() / 1000.0
         self.fr_sum += delta_time
         self.fr_ticker += 1
@@ -207,7 +208,7 @@ class GraphicsProgram3D:
         # actual game
         elif self.game:
             self.can_move = True
-            if not self.falling:
+            if not self.falling: # save coordinates right before falling
                 self.previous_position = Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
             if self.can_move:
                 if self.LEFT_key_down: # counterclockwise
@@ -216,11 +217,15 @@ class GraphicsProgram3D:
                     self.view_matrix.yaw(pi * delta_time)
                 if self.W_key_down: # move forward
                     if self.speed < 5.0:
-                        self.speed += 0.10 # accelerate
+                        self.speed += 0.08 # accelerate
                     self.view_matrix.slide(0, 0, -self.speed * delta_time)
-            if self.S_key_down: # move backwards
-                self.view_matrix.slide(0, 0, 4 * delta_time)
-        
+                else:
+                    if self.speed > 0.0:
+                        self.speed -= 0.08 # accelerate
+                    self.view_matrix.slide(0, 0, -self.speed * delta_time)
+                if self.S_key_down: # move backwards
+                    self.view_matrix.slide(0, 0, 2.5 * delta_time)
+
             # falling off track
             floor_x, floor_z = 20, 20
             start_x, start_z = -5, 0
@@ -229,81 +234,107 @@ class GraphicsProgram3D:
                 self.view_matrix.eye.y -= 0.15
                 self.falling = True
                 self.boost = False
+                self.LEFT_key_down = False
+                self.RIGHT_key_down = False
             if self.falling == True and self.view_matrix.eye.y < -5:
-                self.view_matrix.eye.x = self.previous_position.x
-                self.view_matrix.eye.y = 2.1
-                self.view_matrix.eye.z = self.previous_position.z
+                a, b = 0, 0
+                if self.view_matrix.eye.z<=-10:
+                    a = 0.2
+                if self.view_matrix.eye.z>=10:
+                    a = -0.2
+                if self.view_matrix.eye.x<=-15:
+                    b = 0.2
+                if self.view_matrix.eye.x>=5:
+                    b = -0.2
+                if -13<=self.view_matrix.eye.x<=3 and 8>=self.view_matrix.eye.z>=-8:
+                    print(self.view_matrix.eye)
+                    if self.previous_position.z <= -7.95:
+                        a = -0.2
+                    if self.previous_position.z >= 7.95:
+                        a = 0.2
+                    if self.previous_position.x >= 2.95:
+                        b = 0.2
+                        self.view_matrix.slide(0, 0, 2 * delta_time)
+                    if self.previous_position.x <= -12.95:
+                        b = -0.2
+                    
                 self.falling = False
                 self.speed = 0
+                self.view_matrix.eye.x = self.previous_position.x + b
+                self.view_matrix.eye.y = 2.1
+                self.view_matrix.eye.z = self.previous_position.z + a
             
             # boost
-            if (3.2 <= self.view_matrix.eye.x <= 3.8 and -5.5 <= self.view_matrix.eye.z <= -4.5) or (-1.5 <= self.view_matrix.eye.x <= 1.5 and -9.5 <= self.view_matrix.eye.z <= -9):
+            if (3.6 <= self.view_matrix.eye.x <= 4.2 and -5.5 <= self.view_matrix.eye.z <= -4.5) or (-1.5 <= self.view_matrix.eye.x <= 1.5 and -9.5 <= self.view_matrix.eye.z <= -9):
                 self.boost = True
                 self.tb = time.time()
             if self.boost == True and (time.time()-self.tb)<0.8:
                 self.view_matrix.slide(0, 0, -3 * delta_time)
             
-            def port1check(x, y, nr):
-               if x+0.1>=self.view_matrix.eye.x>=x-0.1 and y <=self.view_matrix.eye.z<=y+1:
-                    if nr == 1:
-                        print("port11 passed")
-                        if self.port22:
-                            self.port11 = True
-                    if nr == 2:
-                        print("port12 passed")
-                        if self.port11:
-                            self.port12 = True
-                    if nr == 3:
-                        print("port13 passed")
-                        if self.port12:
-                            self.port13 = True
-                    if nr == 4:
-                        print("port14 passed")
-                        if self.port13:
-                            self.port14 = True
-                    if nr == 5:
-                        print("port15 passed")
-                        if self.port25:
-                            self.port15 = True
-                    if nr == 6:
-                        print("port16 passed")
-                        if self.port15:
-                            self.port16 = True
-                    if nr == 7:
-                        print("port17 passed")
-                        if self.port16:
-                            self.port17 = True
+            # collision and check passing of ports
+            def port1check(x, z, nr):
+                if x+0.1>=self.view_matrix.eye.x>=x-0.1 and z-0.1 <=self.view_matrix.eye.z<=z+1.1:
+                    if z+0.78 <= self.view_matrix.eye.z or self.view_matrix.eye.z <= z+0.08:
+                        self.view_matrix.eye.x = past_position.x
+                        self.view_matrix.eye.y = past_position.y
+                        self.view_matrix.eye.z = past_position.z
+                        self.speed = 0
+                    else:
+                        if nr == 1:
+                            if self.port22:
+                                self.port11 = True
+                        if nr == 2:
+                            if self.port11:
+                                self.port12 = True
+                        if nr == 3:
+                            if self.port12:
+                                self.port13 = True
+                        if nr == 4:
+                            if self.port13:
+                                self.port14 = True
+                        if nr == 5:
+                            if self.port25:
+                                self.port15 = True
+                        if nr == 6:
+                            if self.port15:
+                                self.port16 = True
+                        if nr == 7:
+                            if self.port16:
+                                self.port17 = True
 
             def port2check(x, y, nr):
-               if x>=self.view_matrix.eye.x>=x-1 and y-0.1 <=self.view_matrix.eye.z<=y+0.1:
-                    if nr == 1:
-                        print("port21 passed")
-                        self.port21 = True
-                    if nr == 2:
-                        print("port22 passed")
-                        if self.port21:
-                            self.port22 = True
-                    if nr == 3:
-                        print("port23 passed")
-                        if self.port14:
-                            self.port23 = True
-                    if nr == 4:
-                        print("port24 passed")
-                        if self.port23:
-                            self.port24 = True
-                    if nr == 5:
-                        print("port25 passed")
-                        if self.port24:
-                            self.port25 = True
+                if x+0.1>=self.view_matrix.eye.x>=x-1 and y-0.11 <=self.view_matrix.eye.z<=y+0.11:
+                    print(self.view_matrix.eye.x)
+                    if x-0.22 <= self.view_matrix.eye.x or self.view_matrix.eye.x <= x-0.88:
+                        print(self.view_matrix.eye.x)
+                        self.view_matrix.eye.x = past_position.x
+                        self.view_matrix.eye.y = past_position.y
+                        self.view_matrix.eye.z = past_position.z
+                        self.speed = 0
+                    else:
+                        if nr == 1:
+                            self.port21 = True
+                        if nr == 2:
+                            if self.port21:
+                                self.port22 = True
+                        if nr == 3:
+                            if self.port14:
+                                self.port23 = True
+                        if nr == 4:
+                            if self.port23:
+                                self.port24 = True
+                        if nr == 5:
+                            if self.port24:
+                                self.port25 = True
             
 
             port1check(2, -9.9, 1) #3
             port1check(-6, -9.2, 2) #4
             port1check(-6.4, -9.2, 3) #5
             port1check(-6.8, -9.2, 4) #6
-            port1check(-8, 8.8, 7) #10
+            port1check(-8, 8.8, 5) #10
             port1check(-7.1, 8.2, 6) #11
-            port1check(2, 8.9, 5) #12
+            port1check(2, 8.9, 7) #12
 
             port2check(4.2, -3, 1) #1
             port2check(4.9, -7, 2) #2
@@ -333,6 +364,8 @@ class GraphicsProgram3D:
         glClear(GL_COLOR_BUFFER_BIT)
         glViewport(0, 0, 800, 600)
         self.model_matrix.load_identity()
+
+        self.projection_matrix.set_perspective(pi / 6 , 800 / 600, 0.5, 100) # radians are being used so you use pi
 
         ### skybox ###
         glEnable(GL_BLEND)
@@ -388,13 +421,14 @@ class GraphicsProgram3D:
         self.track.draw(self.shader)
         self.model_matrix.pop_matrix()
         
+        ## ports ##
         def port_passed():
                 glActiveTexture(GL_TEXTURE0)
                 glBindTexture(GL_TEXTURE_2D, self.texture_id_port_passed)
                 self.shader.set_diffuse_tex(0)
 
         self.cube.set_vertices(self.shader)
-        h, t = 1.51, 0.05 # height course and thickness of port
+        h, t = 1.51, 0.1 # height course and thickness of port
         p_w, p_h = 1, 1.4 # port width and height
 
         def port1(px, py, nr):  
@@ -459,10 +493,11 @@ class GraphicsProgram3D:
         port1(2, 8.9, 7)
 
         
+        ## boosts ##
         set_tex(self.texture_id_boost)
 
         self.model_matrix.push_matrix()     
-        self.model_matrix.add_translation(3.5, 1.52, -5)   
+        self.model_matrix.add_translation(3.9, 1.52, -5)   
         self.model_matrix.add_scale(1, 0.01, 0.6)
         self.shader.set_model_matrix(self.model_matrix.matrix)
         self.cube.draw(self.shader)
