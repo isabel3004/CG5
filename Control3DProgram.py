@@ -92,12 +92,7 @@ class GraphicsProgram3D:
             # 10.0 was just picked arbitrarily after some testing
         self.end_animation_time += 10.0 / (self.end_animation_time - self.start_animation_time)
         self.can_move = False
-<<<<<<< HEAD
         # variables used in the actual game
-=======
-        self.speed = 0
-
->>>>>>> 79c8c81522424eeb2346fadedaf92ba33972bfde
         self.falling = False
         self.port11, self.port12, self.port13, self.port14 = False, False, False, False # has the port been passed yet
         self.port21, self.port22 = False, False
@@ -128,11 +123,6 @@ class GraphicsProgram3D:
         return tex_id
 
     def update(self):
-<<<<<<< HEAD
-=======
-        if self.falling == False:
-            self.previous_position = self.view_matrix.eye
->>>>>>> 79c8c81522424eeb2346fadedaf92ba33972bfde
         delta_time = self.clock.tick() / 1000.0
         self.fr_sum += delta_time
         self.fr_ticker += 1
@@ -140,7 +130,6 @@ class GraphicsProgram3D:
             self.time_running = 0.0
         else:
             self.time_running += delta_time
-<<<<<<< HEAD
         if self.fr_sum > 1.0:
             # print(self.fr_ticker / self.fr_sum)
             self.fr_sum = 0
@@ -246,98 +235,6 @@ class GraphicsProgram3D:
             pass
         elif self.transition:
             pass
-=======
-        if self.time_running > self.start_animation_time and self.time_running < self.end_animation_time:
-            self.can_move = False
-            self.motion.get_current_position(self.time_running - self.start_animation_time, self.view_matrix.eye)
-        else:
-            self.can_move = True
-            self.falling = False
-
-        self.can_move = True
-
-        # self.translation += Vector(delta_time, delta_time, delta_time) * 0.2
-        # self.angle += delta_time * 0.2
-        
-        # self.view_matrix.look_at(Point(1, 0, 3) + Point(self.angle, self.angle, self.angle), Point(0, 0, 0), Vector(0,1,0))
-        # self.shader.use()
-        # self.shader.set_view_matrix(self.view_matrix.get_matrix())
-
-        self.angle += 1 * delta_time
-        # if angle > 2 * pi:
-        #     angle -= (2 * pi)
-
-        # self.fire_01.update(delta_time)
-        self.fire_02.update(delta_time)
-        # self.fire_03.update(delta_time)
-        # self.fire_04.update(delta_time)
-
-        if self.can_move:
-            if self.LEFT_key_down: # counterclockwise
-                self.view_matrix.yaw(-pi * delta_time)
-            if self.RIGHT_key_down: # clockwise
-                self.view_matrix.yaw(pi * delta_time)
-            if self.W_key_down: # move forward
-                if self.speed < 4.1:
-                    self.speed += 0.05
-                self.view_matrix.slide(0, 0, -self.speed * delta_time)
-            else:
-                if self.speed > 0.0:
-                    self.speed -= 0.05
-                    self.view_matrix.slide(0, 0, -self.speed * delta_time)
-            if self.S_key_down: # move backwards
-                self.view_matrix.slide(0, 0, 4 * delta_time)
-        
-
-            # falling off track
-            floor_x, floor_z = 20, 20
-            start_x, start_z = -5, 0
-            if (self.view_matrix.eye.x <= (-(start_x + floor_x)) or self.view_matrix.eye.x >= (-start_x)  or self.view_matrix.eye.z <= (-floor_z/2) or self.view_matrix.eye.z >= (floor_z/2)
-                or (-13 < self.view_matrix.eye.x < 3 and 8 > self.view_matrix.eye.z > -8) or self.view_matrix.eye.y < 2):
-                self.view_matrix.eye.y -= 0.15
-                self.falling = True
-                self.boost = False
-            if self.falling == True and self.view_matrix.eye.y < -4:
-                self.view_matrix.eye.x = self.previous_position.x
-                self.view_matrix.eye.y = 2.1
-                self.view_matrix.eye.z = self.previous_position.z
-                self.falling = False
-            # boost
-            if (3.2 <= self.view_matrix.eye.x <= 3.8 and -5.5 <= self.view_matrix.eye.z <= -4.5) or (-1.5 <= self.view_matrix.eye.x <= 1.5 and -10 <= self.view_matrix.eye.z <= -9):
-                self.boost = True
-                self.tb = time.time()
-            if self.boost == True and (time.time()-self.tb)<0.8:
-                self.view_matrix.slide(0, 0, -3 * delta_time)
-            
-            # check if port is passed
-            if -1.9>=self.view_matrix.eye.x>=-2.1 and -9.9 <=self.view_matrix.eye.z<=-9.1: # port1(2, -9.9, 1)
-                print("port11 passed")
-                self.port11 = True
-            elif -5.9>=self.view_matrix.eye.x>=-6.1 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6, -9.2, 2)
-                print("port12 passed")
-                self.port12 = True
-            elif -6.3>=self.view_matrix.eye.x>=-6.5 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6.4, -9.2, 3)
-                print("port13 passed")
-                self.port13 = True
-            elif -6.7>=self.view_matrix.eye.x>=-6.9 and -9.2<=self.view_matrix.eye.z<=-8.4: # port1(-6.8, -9.2, 4)
-                print("port14 passed")
-                self.port14 = True
-
-            elif 4.9>=self.view_matrix.eye.x>=4.1 and -7.1<=self.view_matrix.eye.z<=-6.9: # port2(4.9, -7, 1)
-                print("port21 passed")
-                self.port21 = True
-            elif 4.2>=self.view_matrix.eye.x>=3.4 and -3.1<=self.view_matrix.eye.z<=-2.9: # port2(4.2, -3, 2)
-                print("port22 passed")
-                self.port22 = True
-            
-            if self.port11 and self.port12 and self.port13 and self.port14 and self.port21 and self.port22:
-                print("finished in!", time.time()-self.t0)
-                print(time.time()-self.t0)
-            # TO DO: display end screen
-
-            
-    
->>>>>>> 79c8c81522424eeb2346fadedaf92ba33972bfde
 
     def display(self):
         glEnable(GL_DEPTH_TEST)
