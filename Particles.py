@@ -39,7 +39,7 @@ class ParticleEffect:
             self.particles.append(Particle(Point(self.position.x, self.position.y, self.position.z), 
                                 Vector(random() - 0.5, random(), 0.0) * 0.5))
 
-    def draw(self, sprite_shader, model_matrix):
+    def draw(self, sprite_shader, model_matrix, op = 0.0, use_op = False):
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE) # to make black basically transparent
@@ -59,7 +59,9 @@ class ParticleEffect:
                 opacity = (1.0 - (particle.time_lived - (self.time_to_live - self.fade_time)) 
                                 / (self.fade_time) * self.opacity)
             else:
-                opacity = self.opacity    
+                opacity = self.opacity   
+            if use_op:
+                opacity = op 
             sprite_shader.set_opacity(opacity)
             model_matrix.push_matrix()
             model_matrix.add_translation(particle.pos.x, particle.pos.y, particle.pos.z)
@@ -87,14 +89,14 @@ class Fire:
                 self.shader.set_fire_02_position(Point(self.particle_effect.position.x, self.particle_effect.position.y, self.particle_effect.position.z))
             elif fire_id == 3:
                 self.shader.set_fire_03_position(Point(self.particle_effect.position.x, self.particle_effect.position.y, self.particle_effect.position.z))
-            self.shader.set_light_diffuse(1.0, 1.0, 1.0)
+            self.shader.set_light_diffuse(0.7, 0.4, 0.7)
             self.shader.set_light_specular(0.5, 0.2, 0.5)
 
     def update(self, delta_time):
         self.particle_effect.update(delta_time)
     
-    def draw(self, model_matrix):
+    def draw(self, model_matrix, op = 0.0, use_op = False):
         self.sprite_shader.use()
-        self.particle_effect.draw(self.sprite_shader, model_matrix)
+        self.particle_effect.draw(self.sprite_shader, model_matrix, op, use_op)
         
     
