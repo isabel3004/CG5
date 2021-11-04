@@ -225,7 +225,6 @@ class GraphicsProgram3D:
                     self.view_matrix.slide(0, 0, -self.speed * delta_time)
                 if self.S_key_down: # move backwards
                     self.view_matrix.slide(0, 0, 2.5 * delta_time)
-
             # falling off track
             floor_x, floor_z = 20, 20
             start_x, start_z = -5, 0
