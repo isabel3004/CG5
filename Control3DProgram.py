@@ -17,7 +17,7 @@ class GraphicsProgram3D:
     def __init__(self):
         pygame.init() 
         pygame.display.set_mode((800,600), pygame.OPENGL | pygame.DOUBLEBUF)
-        pygame.display.set_caption("don't forget to set a caption :)")
+        pygame.display.set_caption("spooky rainbow road")
         # initialize shaders
         self.sprite_shader = SpriteShader()
         self.sprite_shader.use()
