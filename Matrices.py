@@ -1,6 +1,3 @@
-from os import close
-from scipy.spatial.transform import Rotation
-import numpy as np
 from math import *  # trigonometry
 
 from Base3DObjects import *
@@ -111,10 +108,6 @@ class ModelMatrix:
 
 
 class ViewMatrix:
-    """The ViewMatrix class holds the camera's coordinate frame and
-    set's up a transformation concerning the camera's position
-    and orientation"""
-
     def __init__(self):
         self.eye = Point(0, 0, 0)
         self.u = Vector(1, 0, 0)
@@ -165,10 +158,6 @@ class ViewMatrix:
         n_z = self.n.x * (-s) + self.n.z * c
         self.n = Vector(n_x, n_y, n_z)
 
-        
-
-        
-
     def slide(self, del_u, del_v, del_n):
         self.eye += self.u * del_u + self.v * del_v + self.n * del_n
 
@@ -185,8 +174,6 @@ class ViewMatrix:
 
 
 class ProjectionMatrix:
-    """Builds transformations concerning the camera's "lens" """
-
     def __init__(self):
         self.left = -1
         self.right = 1
@@ -239,49 +226,3 @@ class ProjectionMatrix:
                     0, C, D, 0,
                     0, 0, E, F,
                     0, 0, -1, 0]
-
-
-### testing ###
-if __name__ == "__main__":
-    matrix = ModelMatrix()
-    matrix.push_matrix()
-    print(matrix)
-    matrix.add_translation(3, 1, 2)
-    matrix.push_matrix()
-    print(matrix)
-    matrix.add_scale(2, 3, 4)
-    print(matrix)
-    matrix.pop_matrix()
-    print(matrix)
-
-    matrix.add_translation(5, 5, 5)
-    matrix.push_matrix()
-    print(matrix)
-    matrix.add_scale(3, 2, 3)
-    print(matrix)
-    matrix.pop_matrix()
-    print(matrix)
-
-    matrix.pop_matrix()
-    print(matrix)
-
-    matrix.push_matrix()
-    matrix.add_scale(2, 2, 2)
-    print(matrix)
-    matrix.push_matrix()
-    matrix.add_translation(3, 3, 3)
-    print(matrix)
-    matrix.push_matrix()
-    matrix.add_rotation_y(pi / 3)
-    print(matrix)
-    matrix.push_matrix()
-    matrix.add_translation(1, 1, 1)
-    print(matrix)
-    matrix.pop_matrix()
-    print(matrix)
-    matrix.pop_matrix()
-    print(matrix)
-    matrix.pop_matrix()
-    print(matrix)
-    matrix.pop_matrix()
-    print(matrix)

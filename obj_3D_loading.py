@@ -1,7 +1,7 @@
 from Base3DObjects import *
 
 def load_mtl_file(file_location, file_name, mesh_model):
-    print("  Start loading MTL: " + file_name)
+    # print("  Start loading MTL: " + file_name)
     mtl = None
     fin = open(file_location + "/" + file_name)
     for line in fin.readlines():
@@ -9,7 +9,7 @@ def load_mtl_file(file_location, file_name, mesh_model):
         if len(tokens) == 0:
             continue
         if tokens[0] == "newmtl":
-            print("    Material: " + tokens[1])
+            # print("    Material: " + tokens[1])
             mtl = Material()
             mesh_model.add_material(tokens[1], mtl)
         elif tokens[0] == "Kd":
@@ -18,10 +18,10 @@ def load_mtl_file(file_location, file_name, mesh_model):
             mtl.specular = Color(float(tokens[1]), float(tokens[2]), float(tokens[3]))
         elif tokens[0] == "Ns":
             mtl.shininess = float(tokens[1])
-    print("  Finished loading MTL: " + file_name)
+    # print("  Finished loading MTL: " + file_name)
 
 def load_obj_file(file_location, file_name):
-    print("Start loading OBJ: " + file_name)
+    # print("Start loading OBJ: " + file_name)
     mesh_model = MeshModel()
     current_object_id = None
     current_position_list = []
@@ -35,7 +35,7 @@ def load_obj_file(file_location, file_name):
         if tokens[0] == "mtllib":
             load_mtl_file(file_location, tokens[1], mesh_model)
         elif tokens[0] == "o":
-            print("  Mesh: " + tokens[1])
+            # print("  Mesh: " + tokens[1])
             current_object_id = tokens[1]
         elif tokens[0] == "v":
             current_position_list.append(Point(float(tokens[1]), float(tokens[2]), float(tokens[3])))
@@ -65,5 +65,5 @@ def load_obj_file(file_location, file_name):
                     mesh_model.add_vertex(current_object_id, current_position_list[int(tokens[i+2][0])-1], current_normal_list[int(tokens[i+2][2])-1])
                     mesh_model.add_vertex(current_object_id, current_position_list[int(tokens[i+3][0])-1], current_normal_list[int(tokens[i+3][2])-1])
     mesh_model.set_opengl_buffers()
-    print("Finished loading OBJ: " + file_name)
+    # print("Finished loading OBJ: " + file_name)
     return mesh_model
