@@ -75,7 +75,7 @@ class GraphicsProgram3D:
         # initial animation phase
         self.time_running = -1 # means first frame - will be set to actual running time once the program is fully loaded and starts
         self.start_animation_time = 1.0
-        self.end_animation_time = 6.0
+        self.end_animation_time = 11.0
         p =  Point(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z)
         self.motion = BezierMotion(p, Point(1.0, 11.0, -50.0), Point(15.0, 4.0, 2.0), Point(4.0, 7.0, 7.0), self.start_animation_time, self.end_animation_time)
             # added a small delta-time to make sure we end at the right position, otherwise the motion might end slightly earlier
