@@ -212,10 +212,14 @@ class GraphicsProgram3D:
                     self.view_matrix.yaw(pi * delta_time)
                 if self.W_key_down: # move forward
                     if self.speed < 5.0:
-                        self.speed += 0.10 # accelerate
+                        self.speed += 0.08 # accelerate
                     self.view_matrix.slide(0, 0, -self.speed * delta_time)
-            if self.S_key_down: # move backwards
-                self.view_matrix.slide(0, 0, 4 * delta_time)
+                else:
+                    if self.speed > 0.0:
+                        self.speed -= 0.05
+                        self.view_matrix.slide(0, 0, -self.speed * delta_time)
+                if self.S_key_down: # move backwards
+                    self.view_matrix.slide(0, 0, 2.5 * delta_time)
         
             # falling off track
             floor_x, floor_z = 20, 20
@@ -290,23 +294,21 @@ class GraphicsProgram3D:
                     if nr == 5:
                         print("port25 passed")
                         if self.port24:
-                            self.port25 = True
-            
+                            self.port25 = True 
 
             port1check(2, -9.9, 1) #3
             port1check(-6, -9.2, 2) #4
             port1check(-6.4, -9.2, 3) #5
             port1check(-6.8, -9.2, 4) #6
-            port1check(-8, 8.8, 7) #10
+            port1check(-8, 8.8, 5) #10
             port1check(-7.1, 8.2, 6) #11
-            port1check(2, 8.9, 5) #12
+            port1check(2, 8.9, 7) #12
 
             port2check(4.2, -3, 1) #1
             port2check(4.9, -7, 2) #2
             port2check(-13.9, -7, 3)  #7
             port2check(-13.2, -3, 4)  #8
             port2check(-13.9, 5, 5) #9
-
             
             if self.port11 and self.port12 and self.port13 and self.port14 and self.port15 and self.port16 and self.port17 and self.port21 and self.port22 and self.port23 and self.port24 and self.port25:
                 print("finished in!", time.time()-self.t0)
@@ -315,13 +317,8 @@ class GraphicsProgram3D:
                 self.transition_length = 2.0
                 self.transition = True
                 self.second_transition = True
-            
         elif self.won:
             pass
-            # TO DO: display end screen
-
-            
-    
 
     def display(self):
         glEnable(GL_DEPTH_TEST)
@@ -453,7 +450,6 @@ class GraphicsProgram3D:
         port1(-8, 8.8, 5)
         port1(-7.1, 8.2, 6)
         port1(2, 8.9, 7)
-
         
         set_tex(self.texture_id_boost)
 
@@ -477,7 +473,7 @@ class GraphicsProgram3D:
         if self.draw_car:
             self.shader.set_mat_diffuse(Color(1, 1, 1), self.opacity)
             self.model_matrix.push_matrix()
-            self.model_matrix.add_translation(4.0, 2.3, 0.0)
+            self.model_matrix.add_translation(4.0, 2.3, -2.0)
             self.model_matrix.add_scale(0.35, 0.35, 0.35)
             # self.model_matrix.add_rotation_x(self.angle / 3.0)
             # self.model_matrix.add_rotation_y(self.angle / 3.0)
@@ -525,20 +521,34 @@ class GraphicsProgram3D:
 
         if self.won: # display victory message
             glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+            glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+            glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+            self.sprite_shader.use()
+
+            self.sprite_shader.set_view_matrix(self.view_matrix.get_matrix())
+            self.sprite_shader.set_projection_matrix(self.projection_matrix.get_matrix())
+
+            self.model_matrix.push_matrix()
+            self.model_matrix.add_translation(0.0, 7.1, -6.0)
+            self.model_matrix.add_rotation_y(pi/2 + pi/4)
+            self.model_matrix.add_scale(16.0, 12.0, 16.0)
+
+            self.sprite_shader.set_model_matrix(self.model_matrix.matrix)
+            self.model_matrix.pop_matrix()
+
+            self.sprite_shader.set_alpha_tex(1)
             glActiveTexture(GL_TEXTURE0)
             glBindTexture(GL_TEXTURE_2D, self.texture_id_victory_message)
             self.sprite_shader.set_diffuse_tex(0)
-            self.sprite_shader.set_alpha_tex(None)
-            self.sprite_shader.set_opacity(0.5)
-            self.model_matrix.push_matrix()
-            self.model_matrix.add_translation(-1, 0, -5)
-            self.model_matrix.add_scale(10, 10, 10)
-            self.model_matrix.add_rotation_y(pi / 6)
-            self.sprite_shader.set_model_matrix(self.model_matrix.matrix)
-            self.sprite_shader.set_diffuse_tex(self.texture_id_victory_message)
+            glActiveTexture(GL_TEXTURE1)
+            glBindTexture(GL_TEXTURE_2D, self.texture_id_victory_message)
+            self.sprite_shader.set_spec_tex(1)
+            self.sprite_shader.set_opacity(1.0)
+
             self.sprite.draw(self.sprite_shader)
-            self.model_matrix.pop_matrix()
+
             glDisable(GL_BLEND)
 
         pygame.display.flip()
@@ -562,7 +572,7 @@ class GraphicsProgram3D:
                         self.W_key_down = True
                     if event.key == K_s:
                         self.S_key_down = True
-                    if event.key == K_SPACE: # skip initial animation, to hopefully make grading more convenient
+                    if event.key == K_SPACE: # go to the start of the game, letting you skip the initial animation
                         self.draw_car = False
                         self.init = False
                         self.transition = False
@@ -575,6 +585,38 @@ class GraphicsProgram3D:
                         self.shader.set_view_matrix(self.view_matrix.get_matrix())
                         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
                         self.opacity = 1.0
+                    if event.key == K_TAB: # go straight to the victory screen
+                        self.shader.use()
+                        self.shader.set_start_fog(self.start_fog, 0, self.start_fog)
+                        self.shader.set_end_fog(self.end_fog, 0, self.end_fog)
+                        self.shader.set_fog_color(0.0, 0.0, 0.0)
+                        self.init = False
+                        self.game = False
+                        self.transition_length = 2.0
+                        self.transition = True
+                        self.first_transition = False
+                        self.second_transition = True
+                    if event.key == K_r: # restart everything
+                        self.transition = False
+                        self.first_transition = False
+                        self.second_transition = False
+                        self.game = False
+                        self.won = False
+                        self.draw_car = True
+                        self.can_move = False
+                        self.init = True
+                        self.clock = pygame.time.Clock()
+                        self.shader.use()
+                        self.view_matrix.look(Point(-13.0, 8.0, 0.0), Point(4.0, 2.1, 0.0), Vector(0,1,0))
+                        self.shader.set_view_matrix(self.view_matrix.get_matrix())
+                        self.projection_matrix.set_perspective(pi / 6, 800 / 600, 0.5, 30)
+                        self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
+                        self.shader.set_start_fog(self.start_fog, 0, self.start_fog)
+                        self.shader.set_end_fog(self.end_fog, 0, self.end_fog)
+                        self.shader.set_fog_color(0.0, 0.0, 0.0)
+                        self.opacity = 1.0
+                        self.time_running = -1
+                        self.clock.tick()
                 elif event.type == pygame.KEYUP:
                     if event.key == K_LEFT:
                         self.LEFT_key_down = False
