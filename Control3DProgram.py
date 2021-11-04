@@ -29,7 +29,7 @@ class GraphicsProgram3D:
         self.projection_matrix = ProjectionMatrix()
         self.view_matrix.look(Point(-13.0, 8.0, 0.0), Point(4.0, 2.1, 0.0), Vector(0,1,0))
         self.shader.set_view_matrix(self.view_matrix.get_matrix())
-        self.projection_matrix.set_perspective(pi / 6, 800 / 600, 0.5, 30)
+        self.projection_matrix.set_perspective(pi / 30, 800 / 600, 0.08, 30)
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
         # set fog
         self.start_fog = 5.0
@@ -40,9 +40,9 @@ class GraphicsProgram3D:
         # initialize game objects
         self.cube = Cube()
         self.track = Track()
-        self.car = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'carro.obj')
-        self.asteroid_01 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_01.obj')
-        self.asteroid_02 = obj_3D_loading.load_obj_file(sys.path[0] + '/models', 'asteroid_02.obj')
+        self.car = obj_3D_loading.load_obj_file('models', 'carro.obj')
+        self.asteroid_01 = obj_3D_loading.load_obj_file('models', 'asteroid_01.obj')
+        self.asteroid_02 = obj_3D_loading.load_obj_file('models', 'asteroid_02.obj')
         # initialize controls
         self.LEFT_key_down = False
         self.RIGHT_key_down = False
@@ -50,15 +50,15 @@ class GraphicsProgram3D:
         self.S_key_down = False
         self.angle = 0
         # initialize textures
-        self.texture_id_particle = self.load_texture(sys.path[0] + '/textures/particle_purple.jpeg') 
-        self.texture_id_space_02 = self.load_texture(sys.path[0] + '/textures/space.jpeg')
-        self.texture_id_asteroid_01 = self.load_texture(sys.path[0] + '/textures/asteroid_01.jpg')
-        self.texture_id_asteroid_02 = self.load_texture(sys.path[0] + '/textures/asteroid_02.png')
-        self.texture_id_road = self.load_texture(sys.path[0] + "/textures/road.jpg")
-        self.texture_id_port_passed = self.load_texture(sys.path[0] + "/textures/black.png")
-        self.texture_id_boost = self.load_texture(sys.path[0] + "/textures/boost.png")
-        self.texture_id_boost_rotated = self.load_texture(sys.path[0] + "/textures/boostr.png")
-        self.texture_id_victory_message = self.load_texture(sys.path[0] + "/textures/victory_message.png")
+        self.texture_id_particle = self.load_texture('textures/particle_purple.jpeg') 
+        self.texture_id_space_02 = self.load_texture('textures/space.jpeg')
+        self.texture_id_asteroid_01 = self.load_texture('textures/asteroid_01.jpg')
+        self.texture_id_asteroid_02 = self.load_texture('textures/asteroid_02.png')
+        self.texture_id_road = self.load_texture("textures/road.jpg")
+        self.texture_id_port_passed = self.load_texture("textures/black.png")
+        self.texture_id_boost = self.load_texture("textures/boost.png")
+        self.texture_id_boost_rotated = self.load_texture("textures/boostr.png")
+        self.texture_id_victory_message = self.load_texture("textures/victory_message.png")
         self.opacity = 1.0 # this is used for the fading effect
         # initialize sprites and particle effects
         self.sprite = Sprite()
@@ -629,7 +629,7 @@ class GraphicsProgram3D:
                         self.shader.use()
                         self.view_matrix.look(Point(-13.0, 8.0, 0.0), Point(4.0, 2.1, 0.0), Vector(0,1,0))
                         self.shader.set_view_matrix(self.view_matrix.get_matrix())
-                        self.projection_matrix.set_perspective(pi / 6, 800 / 600, 0.5, 30)
+                        self.projection_matrix.set_perspective(pi / 30, 800 / 600, 0.08, 30)
                         self.shader.set_projection_matrix(self.projection_matrix.get_matrix())
                         self.shader.set_start_fog(self.start_fog, 0, self.start_fog)
                         self.shader.set_end_fog(self.end_fog, 0, self.end_fog)

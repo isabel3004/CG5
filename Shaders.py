@@ -5,12 +5,19 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from Base3DObjects import *
+import os
 
 
 class Shader3D:
     def __init__(self):
         vert_shader = glCreateShader(GL_VERTEX_SHADER)
-        shader_file = open(sys.path[0] + "/simple3D.vert")
+
+        filename = 'simple3D.vert' 
+        if '_MEIPASS2' in os.environ:
+            filename = os.path.join(os.environ['_MEIPASS2'], filename)
+        shader_file = open(filename)
+
+        #shader_file = open(sys.path[0] + "/simple3D.vert")
         glShaderSource(vert_shader,shader_file.read())
         shader_file.close()
         glCompileShader(vert_shader)
@@ -19,7 +26,13 @@ class Shader3D:
             print("Couldn't compile vertex shader\nShader compilation Log:\n" + str(glGetShaderInfoLog(vert_shader)))
 
         frag_shader = glCreateShader(GL_FRAGMENT_SHADER)
-        shader_file = open(sys.path[0] + "/simple3D.frag")
+        filename = 'simple3D.frag' 
+        if '_MEIPASS2' in os.environ:
+            filename = os.path.join(os.environ['_MEIPASS2'], filename)
+        shader_file = open(filename)
+
+        #shader_file = open(sys.path[0] + "/simple3D.frag")
+
         glShaderSource(frag_shader,shader_file.read())
         shader_file.close()
         glCompileShader(frag_shader)
@@ -148,7 +161,13 @@ class Shader3D:
 class SpriteShader:   
     def __init__(self):
         vert_shader = glCreateShader(GL_VERTEX_SHADER)
-        shader_file = open(sys.path[0] + "/sprite_shader.vert")
+        frag_shader = glCreateShader(GL_FRAGMENT_SHADER)
+
+        filename = 'sprite_shader.vert' 
+        if '_MEIPASS2' in os.environ:
+            filename = os.path.join(os.environ['_MEIPASS2'], filename)
+        shader_file = open(filename)
+        #shader_file = open(sys.path[0] + "/sprite_shader.vert")
         glShaderSource(vert_shader,shader_file.read())
         shader_file.close()
         glCompileShader(vert_shader)
@@ -156,8 +175,12 @@ class SpriteShader:
         if (result != 1): # shader didn't compile
             print("Couldn't compile vertex shader\nShader compilation Log:\n" + str(glGetShaderInfoLog(vert_shader)))
 
+        filename = 'sprite_shader.frag' 
+        if '_MEIPASS2' in os.environ:
+            filename = os.path.join(os.environ['_MEIPASS2'], filename)
+        shader_file = open(filename)
         frag_shader = glCreateShader(GL_FRAGMENT_SHADER)
-        shader_file = open(sys.path[0] + "/sprite_shader.frag")
+        #shader_file = open(sys.path[0] + "/sprite_shader.frag")
         glShaderSource(frag_shader,shader_file.read())
         shader_file.close()
         glCompileShader(frag_shader)

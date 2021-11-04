@@ -1,9 +1,16 @@
 from Base3DObjects import *
+import os
 
 def load_mtl_file(file_location, file_name, mesh_model):
     # print("  Start loading MTL: " + file_name)
     mtl = None
-    fin = open(file_location + "/" + file_name)
+
+    filename = file_location + "/" + file_name
+    if '_MEIPASS2' in os.environ:
+        filename = os.path.join(os.environ['_MEIPASS2'], filename)
+    fin = open(filename)
+
+    #fin = open(file_location + "/" + file_name)
     for line in fin.readlines():
         tokens = line.split()
         if len(tokens) == 0:
@@ -27,7 +34,13 @@ def load_obj_file(file_location, file_name):
     current_position_list = []
     current_normal_list = []
     current_uv_list = []
-    fin = open(file_location + "/" + file_name)
+
+    filename = file_location + "/" + file_name
+    if '_MEIPASS2' in os.environ:
+        filename = os.path.join(os.environ['_MEIPASS2'], filename)
+    fin = open(filename)
+
+    #fin = open(file_location + "/" + file_name)
     for line in fin.readlines():
         tokens = line.split()
         if len(tokens) == 0:
